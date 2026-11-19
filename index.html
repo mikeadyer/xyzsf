@@ -138,7 +138,18 @@ ol.items li:first-child{border-top:0}
 .pcard .on{font-size:13px;color:var(--ink)}
 footer{margin-top:44px;color:var(--muted);font-size:13px;max-width:70ch}
 @media (prefers-reduced-motion:no-preference){.tab,.chip,.btn{transition:background .15s,color .15s}}
+
+.wx{display:flex;flex-direction:column;gap:12px}
+.wx-top{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 18px}
+.wx-now{font-size:34px;font-weight:650;line-height:1}
+.wx-days{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+.wx-d{display:flex;flex-direction:column;gap:2px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;font-size:13px;min-width:0}
+.wx-trip{background:var(--bg)}
+.wx-n{font-weight:600}.wx-dt{color:var(--muted);font-weight:400}
+.wx-r{color:var(--muted);font-size:12px}
+@media(max-width:560px){.wx-days{grid-template-columns:repeat(3,minmax(0,1fr))}}
 </style>
+<style>.wx-days{grid-template-columns:repeat(auto-fit,minmax(104px,1fr))!important}@media(max-width:560px){.wx-days{grid-template-columns:repeat(2,minmax(0,1fr))!important}}</style>
 </head>
 <body>
 
@@ -150,8 +161,24 @@ footer{margin-top:44px;color:var(--muted);font-size:13px;max-width:70ch}
   <p class="sub">Four of us, a hotel at the top of Nob Hill, two tours booked, and a lot of thrift stores and oddity shops to find.</p>
 </header>
 
+<section aria-labelledby="wx-h" style="margin-top:0;margin-bottom:28px">
+  <div class="sec-head"><h2 id="wx-h">San Francisco weather</h2><span class="note-small" id="wx-stamp">Snapshot from Thu 11/19, 6 PM Eastern. Loading the live forecast.</span></div>
+  <div class="card wx">
+    <div class="wx-top" id="wx-top"><span class="wx-now">56&deg;F</span><span>Partly sunny right now. Today: high 56&deg;, low 51&deg;, 65% chance of rain.</span></div>
+    <div class="wx-days" id="wx-days" role="list" aria-label="Next five days, high and low in degrees Fahrenheit">
+<div class="wx-d"><span class="wx-n">Fri <span class="wx-dt">11/20</span></span><span class="wx-t"><b>56&deg;</b> / 46&deg;</span><span class="wx-r">45% rain</span></div>
+<div class="wx-d"><span class="wx-n">Sat <span class="wx-dt">11/21</span></span><span class="wx-t"><b>54&deg;</b> / 46&deg;</span><span class="wx-r">15% rain</span></div>
+<div class="wx-d wx-trip"><span class="wx-n">Sun <span class="wx-dt">11/22</span></span><span class="wx-t"><b>53&deg;</b> / 47&deg;</span><span class="wx-r">45% rain</span></div>
+<div class="wx-d wx-trip"><span class="wx-n">Mon <span class="wx-dt">11/23</span></span><span class="wx-t"><b>55&deg;</b> / 47&deg;</span><span class="wx-r">15% rain</span></div>
+<div class="wx-d wx-trip"><span class="wx-n">Tue <span class="wx-dt">11/24</span></span><span class="wx-t"><b>60&deg;</b> / 55&deg;</span><span class="wx-r">75% rain</span></div>
+    </div>
+    <p id="wx-note">Shaded days are trip days. Later in the week: Wed 11/25 high 62&deg;, low 57&deg;, 15% rain. Thu 11/26 high 63&deg;, low 57&deg;, 10% rain.</p>
+    <p class="note-small" id="wx-src">Snapshot from Claude's weather tool, which does not name its provider. For the live forecast, see <a href="https://forecast.weather.gov/MapClick.php?lat=37.7749&amp;lon=-122.4194" target="_blank" rel="noopener">National Weather Service, San Francisco</a>.</p>
+  </div>
+</section>
+
 <section aria-labelledby="ess-h" style="margin-top:0">
-  <div class="sec-head"><h2 id="ess-h">Bookings</h2><span class="note-small">Tap Copy to grab a confirmation number.</span></div>
+  <div class="sec-head"><h2 id="ess-h">Bookings</h2><span class="note-small">Confirmation numbers are kept off this public copy.</span></div>
   <div class="ess">
     <div class="card">
       <h3>Delta flights</h3>
@@ -167,13 +194,13 @@ footer{margin-top:44px;color:var(--muted);font-size:13px;max-width:70ch}
         <span>Sat 11/28</span><span><b>DL513</b> SFO 2:05 PM to ATL 9:42 PM</span>
         <span></span><span class="note-small">Seats 29 F, 29 G, 30 F, 30 G</span>
       </div>
-      <div class="row"><span class="conf"><code>G76SRO</code><button type="button" data-copy="G76SRO">Copy</button></span><a href="https://www.delta.com" target="_blank" rel="noopener">delta.com</a></div>
+      <div class="row"><a href="https://www.delta.com" target="_blank" rel="noopener">delta.com</a></div>
     </div>
     <div class="card">
       <h3>Stanford Court</h3>
       <p>905 California St, Nob Hill. Cable cars stop outside. Covered entrance for rideshare drop-offs.</p>
       <p class="mono">Sun 11/22 to Sat 11/28 <span style="font-family:var(--body)">(dates assumed from flights)</span></p>
-      <div class="row"><span class="conf"><code>6370489871</code><button type="button" data-copy="6370489871">Copy</button></span><span class="mono">+1 415-989-3500</span></div>
+      <div class="row"><span class="mono">+1 415-989-3500</span></div>
       <div class="links"><a href="http://www.stanfordcourt.com/" target="_blank" rel="noopener">Hotel site</a><a href="https://maps.google.com/?cid=13236050428154665116" target="_blank" rel="noopener">Google Maps</a></div>
     </div>
     <div class="card">
@@ -181,14 +208,14 @@ footer{margin-top:44px;color:var(--muted);font-size:13px;max-width:70ch}
       <p>Dylan's Tours, Half Day Famous Tour. 4 adults.</p>
       <p class="mono">Mon 11/23 · 9:00 AM</p>
       <p>Check in by 8:45 at the Fisherman's Wharf sign, 2820 Taylor St. Park entry is $15 per adult and not in the ticket price (free with a National Park pass, free for 14 and under). Trouble finding it: +1 415-932-6993.</p>
-      <div class="row"><span class="conf"><code>B-V3E4P4M</code><button type="button" data-copy="B-V3E4P4M">Copy</button></span><a href="https://www.nps.gov/muwo" target="_blank" rel="noopener">NPS Muir Woods</a></div>
+      <div class="row"><a href="https://www.nps.gov/muwo" target="_blank" rel="noopener">NPS Muir Woods</a></div>
     </div>
     <div class="card">
       <h3>Alcatraz Day Tour</h3>
       <p>Alcatraz City Cruises. 3 adults, 1 junior. Audio tour included.</p>
       <p class="mono">Wed 11/25 · 10:35 AM ferry</p>
       <p>Be at Pier 33 by 10:05, since boarding starts 30 minutes before departure. One QR code covers the whole party.</p>
-      <div class="row"><span class="conf"><code>i87332049 / 87332048</code><button type="button" data-copy="i87332049 / 87332048">Copy</button></span><a href="https://alcatrazcitycruises.com/" target="_blank" rel="noopener">Manage booking</a></div>
+      <div class="row"><a href="https://alcatrazcitycruises.com/" target="_blank" rel="noopener">Manage booking</a></div>
     </div>
   </div>
 </section>
@@ -804,5 +831,40 @@ renderTabs();renderMap();renderDetail();renderPanel();renderChips();renderGrid()
 })();
 </script>
 
+<script>
+(function(){
+  var URL="https://api.open-meteo.com/v1/forecast?latitude=37.7749&longitude=-122.4194&current=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&temperature_unit=fahrenheit&timezone=America%2FLos_Angeles&forecast_days=8";
+  var TRIP_START="2026-11-22",TRIP_END="2026-11-28";
+  var DOW=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+  function text(c){
+    if(c===0)return"Clear";if(c===1)return"Mostly clear";if(c===2)return"Partly cloudy";if(c===3)return"Overcast";
+    if(c===45||c===48)return"Fog";if(c>=51&&c<=57)return"Drizzle";if(c>=61&&c<=67)return"Rain";
+    if(c>=71&&c<=77)return"Snow";if(c>=80&&c<=82)return"Rain showers";if(c===85||c===86)return"Snow showers";
+    if(c>=95)return"Thunderstorms";return"";
+  }
+  function el(id){return document.getElementById(id);}
+  function render(d){
+    var cur=d.current,dl=d.daily,i,html="";
+    for(i=0;i<dl.time.length;i++){
+      var t=dl.time[i],dt=new Date(t+"T12:00:00Z"),trip=t>=TRIP_START&&t<=TRIP_END;
+      var p=dl.precipitation_probability_max[i];
+      html+='<div class="wx-d'+(trip?' wx-trip':'')+'" role="listitem"><span class="wx-n">'+DOW[dt.getUTCDay()]+' <span class="wx-dt">'+(dt.getUTCMonth()+1)+'/'+dt.getUTCDate()+'</span></span>'+
+        '<span class="wx-t"><b>'+Math.round(dl.temperature_2m_max[i])+'&deg;</b> / '+Math.round(dl.temperature_2m_min[i])+'&deg;</span>'+
+        '<span class="wx-r">'+(p==null?'?':p)+'% precip</span><span class="wx-r">'+text(dl.weather_code[i])+'</span></div>';
+    }
+    el("wx-days").innerHTML=html;
+    el("wx-top").innerHTML='<span class="wx-now">'+Math.round(cur.temperature_2m)+'&deg;F</span><span>'+text(cur.weather_code)+' right now. Each day shows the high, then the low, then the chance of rain or other precipitation.</span>';
+    el("wx-note").textContent="Shaded days are trip days (Sun 11/22 to Sat 11/28).";
+    el("wx-src").innerHTML='Live forecast from <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo.com</a> for San Francisco. Official forecast: <a href="https://forecast.weather.gov/MapClick.php?lat=37.7749&amp;lon=-122.4194" target="_blank" rel="noopener">National Weather Service</a>.';
+    var n=new Date();
+    el("wx-stamp").textContent="Live. Loaded "+n.toLocaleDateString([], {weekday:"short",month:"numeric",day:"numeric"})+" at "+n.toLocaleTimeString([], {hour:"numeric",minute:"2-digit"})+".";
+  }
+  try{
+    fetch(URL).then(function(r){if(!r.ok)throw new Error(r.status);return r.json();}).then(function(d){
+      if(!d||!d.daily||!d.current)throw new Error("bad data");render(d);
+    }).catch(function(e){console.log("wxerr",String(e));var s=el("wx-stamp");if(s)s.textContent="Could not load the live forecast. Showing a snapshot from Thu 11/19.";});
+  }catch(e){}
+})();
+</script>
 </body>
 </html>
