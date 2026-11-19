@@ -1,0 +1,808 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>:root{color-scheme:light}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>SF Thanksgiving Trip</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: essentials row on top, then day tabs driving a zoomable schematic map (left) and day plan (right), then a filterable places list. */
+:root{
+  --bg:#EBF0F2; --surface:#F7F9FA; --ink:#12232D; --muted:#53656F; --line:#C8D3D9;
+  --accent:#C2402B; --water:#C7DCE7; --land:#F2F3EE; --park:#CBE2C1; --halo:#F7F9FA;
+  --d-mon:#1B7A8A; --d-tue:#6B4FA3; --d-wed:#A35E0C; --d-fri:#2F7D4F; --d-reel:#C2307A; --d-none:#53656F; --on:#FFFFFF;
+  --disp:'Bricolage Grotesque','Avenir Next',system-ui,sans-serif;
+  --body:'Instrument Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0C1920; --surface:#13242D; --ink:#E5EEF2; --muted:#9DB1BB; --line:#294350;
+    --accent:#FF7A5C; --water:#0F2D3D; --land:#182A31; --park:#1E3A2B; --halo:#13242D;
+    --d-mon:#55C2D3; --d-tue:#B1A2E6; --d-wed:#E8A653; --d-fri:#6CC892; --d-reel:#F08DB8; --d-none:#9DB1BB; --on:#0C1920;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0C1920; --surface:#13242D; --ink:#E5EEF2; --muted:#9DB1BB; --line:#294350;
+  --accent:#FF7A5C; --water:#0F2D3D; --land:#182A31; --park:#1E3A2B; --halo:#13242D;
+  --d-mon:#55C2D3; --d-tue:#B1A2E6; --d-wed:#E8A653; --d-fri:#6CC892; --d-reel:#F08DB8; --d-none:#9DB1BB; --on:#0C1920;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font:15px/1.5 var(--body);
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-block:28px 56px;
+}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--bg);z-index:10}
+.wrap{max-width:1180px;margin:0 auto}
+a{color:var(--ink);text-decoration-color:var(--accent);text-underline-offset:3px}
+a:focus-visible,button:focus-visible,.pin:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+h1,h2,h3{font-family:var(--disp);margin:0;text-wrap:balance;line-height:1.1}
+.eyebrow{font:500 12px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+header{display:flex;flex-direction:column;gap:10px;margin-bottom:26px}
+h1{font-size:clamp(34px,6vw,58px);font-weight:700;letter-spacing:-.02em}
+.sub{color:var(--muted);max-width:60ch;margin:0}
+h2{font-size:24px;font-weight:650;letter-spacing:-.01em}
+section{margin-top:40px}
+.sec-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+
+/* accordions */
+.acc{border-top:1px solid var(--line)}
+.acc summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:6px 14px;flex-wrap:wrap;padding:14px 0}
+.acc summary::-webkit-details-marker{display:none}
+.acc summary::after{content:"Show";font:500 12px var(--mono);letter-spacing:.06em;text-transform:uppercase;border:1px solid var(--line);border-radius:6px;padding:3px 10px;color:var(--ink);background:var(--surface);margin-left:auto}
+.acc[open] summary::after{content:"Hide"}
+.acc summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.acc-meta{color:var(--muted);font-size:14px;min-width:0}
+.acc-note{margin:0 0 14px}
+.acc .grid{padding-bottom:10px}
+
+/* essentials */
+.ess{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.card h3{font-size:18px;font-weight:650}
+.card p{margin:0;color:var(--muted);font-size:14px}
+.row{display:flex;justify-content:space-between;gap:10px;align-items:baseline;flex-wrap:wrap}
+.mono{font-family:var(--mono);font-size:13px}
+.conf{display:inline-flex;align-items:center;gap:8px;font:500 13px var(--mono);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:3px 4px 3px 8px;max-width:100%}
+.conf code{font:inherit;overflow-wrap:anywhere}
+.conf button{font:500 11px var(--body);border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:4px;padding:2px 7px;cursor:pointer}
+.flt{display:grid;grid-template-columns:auto 1fr;gap:2px 12px;font-size:14px}
+.flt b{font-family:var(--mono);font-weight:500;font-size:13px}
+.arc{width:100%;height:auto;max-height:70px}
+.links{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:14px}
+
+/* tabs */
+.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);display:flex;gap:6px;overflow-x:auto;padding:10px 0;margin-bottom:6px;scrollbar-width:thin}
+.tab{border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:6px 12px;border-radius:8px;font:500 13px var(--body);white-space:nowrap;cursor:pointer;display:inline-flex;align-items:center;gap:7px}
+.tab[aria-selected="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block;background:var(--d-none)}
+
+.plan{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:22px;align-items:start}
+@media (max-width:880px){.plan{grid-template-columns:minmax(0,1fr)}}
+.mapcol{position:sticky;top:64px;display:flex;flex-direction:column;gap:12px;min-width:0}
+@media (max-width:880px){.mapcol{position:static}}
+#map svg{display:block;width:100%;height:auto;border:1px solid var(--line);border-radius:10px;user-select:none;-webkit-user-select:none}
+.mapbox{position:relative}
+.zoomctl{position:absolute;top:10px;right:10px;display:flex;flex-direction:column;gap:6px}
+.zoomctl button{min-width:40px;min-height:40px;padding:0 8px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font:600 18px/1 var(--body);cursor:pointer}
+.zoomctl button#zreset{font:500 11px var(--mono);letter-spacing:.05em;text-transform:uppercase}
+.zoomctl button:active{background:var(--bg)}
+.zoomctl button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.pin{cursor:pointer}
+.halo{paint-order:stroke;stroke:var(--halo);stroke-width:3px;stroke-linejoin:round}
+#detail{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;min-height:96px}
+#detail h3{font-size:18px;font-weight:650;margin-bottom:2px}
+#detail p{margin:4px 0;font-size:14px;color:var(--muted)}
+.btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.btn{display:inline-block;border:1px solid var(--ink);border-radius:7px;padding:5px 11px;font:500 13px var(--body);text-decoration:none;background:var(--surface);color:var(--ink)}
+.btn.solid{background:var(--ink);color:var(--bg)}
+.note-small{font-size:12px;color:var(--muted);margin:0}
+
+.daytitle{display:flex;flex-direction:column;gap:2px;margin-bottom:12px}
+.daytitle h2{font-size:26px}
+ol.items{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+ol.items li{display:grid;grid-template-columns:86px minmax(0,1fr);gap:4px 12px;padding:12px 0;border-top:1px solid var(--line)}
+ol.items li:first-child{border-top:0}
+.time{font:500 12px var(--mono);color:var(--muted);padding-top:3px}
+.what{display:flex;flex-direction:column;gap:3px;min-width:0}
+.what .t{font-weight:600}
+.what .s{color:var(--muted);font-size:14px}
+.linkbtn{all:unset;cursor:pointer;font-weight:600;text-decoration:underline;text-decoration-color:var(--accent);text-underline-offset:3px}
+.linkbtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.tag{align-self:flex-start;font:500 11px var(--mono);letter-spacing:.04em;text-transform:uppercase;border-radius:5px;padding:1px 7px}
+.k-booked{background:var(--ink);color:var(--bg)}
+.k-suggested{border:1px solid var(--line);color:var(--muted)}
+.k-optional{border:1px dashed var(--muted);color:var(--muted)}
+.k-saved{border:1px solid var(--d-reel);color:var(--d-reel)}
+.k-open{border:1px solid var(--accent);color:var(--accent)}
+.daygo{display:flex;flex-direction:column;gap:2px;width:100%;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:10px;cursor:pointer;color:var(--ink);font:inherit}
+.daygo b{font-family:var(--disp);font-size:17px;font-weight:650;display:flex;align-items:center;gap:8px}
+.daygo span{color:var(--muted);font-size:14px}
+
+/* places */
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:5px 12px;border-radius:999px;font:500 13px var(--body);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:12px}
+.pcard{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.pcard h3{font-size:17px;font-weight:650}
+.pcard .meta{font:500 11px var(--mono);letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.pcard p{margin:0;font-size:14px;color:var(--muted)}
+.pcard .on{font-size:13px;color:var(--ink)}
+footer{margin-top:44px;color:var(--muted);font-size:13px;max-width:70ch}
+@media (prefers-reduced-motion:no-preference){.tab,.chip,.btn{transition:background .15s,color .15s}}
+</style>
+</head>
+<body>
+
+
+<div class="wrap">
+<header>
+  <div class="eyebrow">Nov 22 to 28, 2026 · Atlanta to San Francisco</div>
+  <h1>San Francisco, Thanksgiving week</h1>
+  <p class="sub">Four of us, a hotel at the top of Nob Hill, two tours booked, and a lot of thrift stores and oddity shops to find.</p>
+</header>
+
+<section aria-labelledby="ess-h" style="margin-top:0">
+  <div class="sec-head"><h2 id="ess-h">Bookings</h2><span class="note-small">Tap Copy to grab a confirmation number.</span></div>
+  <div class="ess">
+    <div class="card">
+      <h3>Delta flights</h3>
+      <svg class="arc" viewBox="0 0 300 70" role="img" aria-label="Flight arc between Atlanta and San Francisco">
+        <path d="M30 56 Q150 -14 270 56" fill="none" stroke="var(--muted)" stroke-width="1.5" stroke-dasharray="5 5"/>
+        <circle cx="30" cy="56" r="5" fill="var(--ink)"/><circle cx="270" cy="56" r="5" fill="var(--accent)"/>
+        <text x="30" y="69" text-anchor="middle" font-size="11" font-family="IBM Plex Mono, monospace" fill="var(--ink)">SFO</text>
+        <text x="270" y="69" text-anchor="middle" font-size="11" font-family="IBM Plex Mono, monospace" fill="var(--ink)">ATL</text>
+      </svg>
+      <div class="flt">
+        <span>Sun 11/22</span><span><b>DL517</b> ATL 4:30 PM to SFO 6:30 PM</span>
+        <span></span><span class="note-small">Seats 31 A, B, C, D</span>
+        <span>Sat 11/28</span><span><b>DL513</b> SFO 2:05 PM to ATL 9:42 PM</span>
+        <span></span><span class="note-small">Seats 29 F, 29 G, 30 F, 30 G</span>
+      </div>
+      <div class="row"><span class="conf"><code>G76SRO</code><button type="button" data-copy="G76SRO">Copy</button></span><a href="https://www.delta.com" target="_blank" rel="noopener">delta.com</a></div>
+    </div>
+    <div class="card">
+      <h3>Stanford Court</h3>
+      <p>905 California St, Nob Hill. Cable cars stop outside. Covered entrance for rideshare drop-offs.</p>
+      <p class="mono">Sun 11/22 to Sat 11/28 <span style="font-family:var(--body)">(dates assumed from flights)</span></p>
+      <div class="row"><span class="conf"><code>6370489871</code><button type="button" data-copy="6370489871">Copy</button></span><span class="mono">+1 415-989-3500</span></div>
+      <div class="links"><a href="http://www.stanfordcourt.com/" target="_blank" rel="noopener">Hotel site</a><a href="https://maps.google.com/?cid=13236050428154665116" target="_blank" rel="noopener">Google Maps</a></div>
+    </div>
+    <div class="card">
+      <h3>Muir Woods tour</h3>
+      <p>Dylan's Tours, Half Day Famous Tour. 4 adults.</p>
+      <p class="mono">Mon 11/23 · 9:00 AM</p>
+      <p>Check in by 8:45 at the Fisherman's Wharf sign, 2820 Taylor St. Park entry is $15 per adult and not in the ticket price (free with a National Park pass, free for 14 and under). Trouble finding it: +1 415-932-6993.</p>
+      <div class="row"><span class="conf"><code>B-V3E4P4M</code><button type="button" data-copy="B-V3E4P4M">Copy</button></span><a href="https://www.nps.gov/muwo" target="_blank" rel="noopener">NPS Muir Woods</a></div>
+    </div>
+    <div class="card">
+      <h3>Alcatraz Day Tour</h3>
+      <p>Alcatraz City Cruises. 3 adults, 1 junior. Audio tour included.</p>
+      <p class="mono">Wed 11/25 · 10:35 AM ferry</p>
+      <p>Be at Pier 33 by 10:05, since boarding starts 30 minutes before departure. One QR code covers the whole party.</p>
+      <div class="row"><span class="conf"><code>i87332049 / 87332048</code><button type="button" data-copy="i87332049 / 87332048">Copy</button></span><a href="https://alcatrazcitycruises.com/" target="_blank" rel="noopener">Manage booking</a></div>
+    </div>
+  </div>
+</section>
+
+<section aria-labelledby="trans-h" style="margin-top:28px">
+  <div class="sec-head"><h2 id="trans-h">Transportation</h2><span class="note-small">Fares are from the SFMTA site. Check them before you go.</span></div>
+  <div class="ess">
+    <div class="card">
+      <h3>Muni buses and light rail</h3>
+      <p>San Francisco's city transit: buses, Muni Metro light rail and the historic streetcars. Good for the Haight, Golden Gate Park, the Mission and Japantown.</p>
+      <div class="btns"><a class="btn solid" href="https://www.sfmta.com/muni-transit" target="_blank" rel="noopener">Muni transit</a><a class="btn" href="https://www.sfmta.com/maps/muni-service-map" target="_blank" rel="noopener">Muni route map</a><a class="btn" href="https://www.sfmta.com/getting-around/muni/routes-stops" target="_blank" rel="noopener">Routes and stops</a></div>
+    </div>
+    <div class="card">
+      <h3>Cable cars</h3>
+      <p>The California Street line runs past the hotel. A single ride is $9 and has no transfers, so use a pass if you ride more than once or twice. Lines can be long at the Powell St turnaround.</p>
+      <div class="btns"><a class="btn" href="https://www.sfmta.com/getting-around/muni/cable-cars" target="_blank" rel="noopener">Cable car info</a></div>
+    </div>
+    <div class="card">
+      <h3>Fares and paying</h3>
+      <p>Adult single ride $2.85 with Clipper, MuniMobile or a tapped card ($3 cash). Day pass $5.70. Visitor Passports cover Muni and cable cars: 1 day $15, 3 days $35, 7 days $47. Youth 18 and under ride Muni free, but not cable cars.</p>
+      <div class="btns"><a class="btn" href="https://www.sfmta.com/getting-around/muni/fares" target="_blank" rel="noopener">Muni fares</a><a class="btn" href="https://www.sfmta.com/visitors" target="_blank" rel="noopener">Visitor info</a></div>
+    </div>
+  </div>
+</section>
+
+<section aria-labelledby="mymap-h" style="margin-top:28px">
+  <div class="sec-head"><h2 id="mymap-h">Trip map on Google Maps</h2><span class="note-small">Real streets, satellite view and directions.</span></div>
+  <div class="ess">
+    <div class="card">
+      <h3>Our Google map</h3>
+      <p>The hotel and every stop from this page, with one layer per day and a From Reels layer. On your phone it also shows in the Google Maps app under Saved, then Maps. The Muir Woods and Wharf sign pins are approximate.</p>
+      <div class="btns"><a class="btn solid" href="https://www.google.com/maps/d/viewer?mid=1poRwcFd-AqRfh-1KHdzXbpgrjugPejk" target="_blank" rel="noopener">Open trip map</a></div>
+    </div>
+  </div>
+</section>
+
+<section aria-labelledby="plan-h">
+  <div class="sec-head"><h2 id="plan-h">Day by day</h2><span class="note-small">Pick a day to zoom the map. Tap a pin or a stop for details.</span></div>
+  <div class="tabs" role="tablist" id="tabs" aria-label="Trip days"></div>
+  <div class="plan">
+    <div class="mapcol">
+      <div class="mapbox">
+        <div id="map"></div>
+        <div class="zoomctl" role="group" aria-label="Map zoom">
+          <button type="button" id="zin" aria-label="Zoom in">+</button>
+          <button type="button" id="zout" aria-label="Zoom out">&minus;</button>
+          <button type="button" id="zreset" aria-label="Reset map view">Reset</button>
+        </div>
+      </div>
+      <div id="detail" aria-live="polite"></div>
+      <p class="note-small">Schematic map, not to scale. Drag to pan. Pinch, double-tap or use + and &minus; to zoom (on a computer, hold Ctrl or Cmd and scroll). Routes are straight lines between stops, so use the Google Maps buttons for real directions.</p>
+    </div>
+    <div id="panel"></div>
+  </div>
+</section>
+
+<section aria-labelledby="dinner-h" style="margin-top:28px">
+  <details class="acc">
+    <summary><h2 id="dinner-h">Sunday dinner</h2><span class="acc-meta">Uncle Vito's Pizza · Nov 22</span></summary>
+    <p class="sub acc-note">You land at 6:30 PM, so expect to reach the hotel around 7:30 to 8. Uncle Vito's is open until 10 PM on Sunday, so a late arrival is fine. Call ahead if the flight runs late. Hours are from Google listings.</p>
+    <div class="grid" id="dgrid"></div>
+  </details>
+</section>
+
+<section aria-labelledby="store-h" style="margin-top:12px">
+  <details class="acc">
+    <summary><h2 id="store-h">Supplies for the rooms</h2><span class="acc-meta">5 nearby markets · water, snacks, fruit, toiletries</span></summary>
+    <p class="sub acc-note">All within a few blocks of the hotel and open most evenings. Check hours for Thanksgiving Day before counting on one.</p>
+    <div class="grid" id="sgrid"></div>
+  </details>
+</section>
+
+<section aria-labelledby="reels-h" style="margin-top:12px">
+  <details class="acc">
+    <summary><h2 id="reels-h">From Reels</h2><span class="acc-meta" id="rmeta">1 place · not on a day yet</span></summary>
+    <p class="sub acc-note">Spots saved from Instagram reels. None are scheduled on a day yet. Hours are from Google listings.</p>
+    <div class="grid" id="rgrid"></div>
+  </details>
+</section>
+
+<section aria-labelledby="gms-h" style="margin-top:28px">
+  <div class="sec-head"><h2 id="gms-h">Search Google Maps by neighborhood</h2><span class="note-small">Each link opens a live Google Maps search for that area.</span></div>
+  <div class="grid">
+    <div class="card">
+      <h3>Mission District</h3>
+      <p class="mono">Tue 11/24</p>
+      <div class="links"><a href="https://www.google.com/maps/search/?api=1&query=thrift%2C%20antique%2C%20unique%2C%20or%20interesting%20shops%20in%20Mission%20District%2C%20San%20Francisco" target="_blank" rel="noopener">Thrift, antique, unique shops</a><a href="https://www.google.com/maps/search/?api=1&query=hip%2C%20local%20favorite%2C%20casual%20family-friendly%20restaurants%20in%20Mission%20District%2C%20San%20Francisco" target="_blank" rel="noopener">Hip, local favorite restaurants</a><a href="https://www.google.com/maps/search/?api=1&query=breakfast%20in%20Mission%20District%2C%20San%20Francisco" target="_blank" rel="noopener">Breakfast</a><a href="https://www.google.com/maps/search/?api=1&query=coffee%20and%20tea%20in%20Mission%20District%2C%20San%20Francisco" target="_blank" rel="noopener">Coffee &amp; tea</a><a href="https://www.google.com/maps/search/?api=1&query=sweet%20treats%2C%20bakeries%2C%20ice%20cream%20and%20desserts%20in%20Mission%20District%2C%20San%20Francisco" target="_blank" rel="noopener">Sweet treats</a><a href="https://www.google.com/maps/search/?api=1&query=breweries%20in%20Mission%20District%2C%20San%20Francisco" target="_blank" rel="noopener">Breweries</a></div>
+    </div>
+    <div class="card">
+      <h3>Haight-Ashbury</h3>
+      <p class="mono">Fri 11/27</p>
+      <div class="links"><a href="https://www.google.com/maps/search/?api=1&query=thrift%2C%20antique%2C%20unique%2C%20or%20interesting%20shops%20in%20Haight-Ashbury%2C%20San%20Francisco" target="_blank" rel="noopener">Thrift, antique, unique shops</a><a href="https://www.google.com/maps/search/?api=1&query=hip%2C%20local%20favorite%2C%20casual%20family-friendly%20restaurants%20in%20Haight-Ashbury%2C%20San%20Francisco" target="_blank" rel="noopener">Hip, local favorite restaurants</a><a href="https://www.google.com/maps/search/?api=1&query=breakfast%20in%20Haight-Ashbury%2C%20San%20Francisco" target="_blank" rel="noopener">Breakfast</a><a href="https://www.google.com/maps/search/?api=1&query=coffee%20and%20tea%20in%20Haight-Ashbury%2C%20San%20Francisco" target="_blank" rel="noopener">Coffee &amp; tea</a><a href="https://www.google.com/maps/search/?api=1&query=sweet%20treats%2C%20bakeries%2C%20ice%20cream%20and%20desserts%20in%20Haight-Ashbury%2C%20San%20Francisco" target="_blank" rel="noopener">Sweet treats</a><a href="https://www.google.com/maps/search/?api=1&query=breweries%20in%20Haight-Ashbury%2C%20San%20Francisco" target="_blank" rel="noopener">Breweries</a></div>
+    </div>
+    <div class="card">
+      <h3>North Beach</h3>
+      <p class="mono">Wed 11/25</p>
+      <div class="links"><a href="https://www.google.com/maps/search/?api=1&query=thrift%2C%20antique%2C%20unique%2C%20or%20interesting%20shops%20in%20North%20Beach%2C%20San%20Francisco" target="_blank" rel="noopener">Thrift, antique, unique shops</a><a href="https://www.google.com/maps/search/?api=1&query=hip%2C%20local%20favorite%2C%20casual%20family-friendly%20restaurants%20in%20North%20Beach%2C%20San%20Francisco" target="_blank" rel="noopener">Hip, local favorite restaurants</a><a href="https://www.google.com/maps/search/?api=1&query=breakfast%20in%20North%20Beach%2C%20San%20Francisco" target="_blank" rel="noopener">Breakfast</a><a href="https://www.google.com/maps/search/?api=1&query=coffee%20and%20tea%20in%20North%20Beach%2C%20San%20Francisco" target="_blank" rel="noopener">Coffee &amp; tea</a><a href="https://www.google.com/maps/search/?api=1&query=sweet%20treats%2C%20bakeries%2C%20ice%20cream%20and%20desserts%20in%20North%20Beach%2C%20San%20Francisco" target="_blank" rel="noopener">Sweet treats</a><a href="https://www.google.com/maps/search/?api=1&query=breweries%20in%20North%20Beach%2C%20San%20Francisco" target="_blank" rel="noopener">Breweries</a></div>
+    </div>
+    <div class="card">
+      <h3>Chinatown</h3>
+      <p class="mono">Wed 11/25</p>
+      <div class="links"><a href="https://www.google.com/maps/search/?api=1&query=thrift%2C%20antique%2C%20unique%2C%20or%20interesting%20shops%20in%20Chinatown%2C%20San%20Francisco" target="_blank" rel="noopener">Thrift, antique, unique shops</a><a href="https://www.google.com/maps/search/?api=1&query=hip%2C%20local%20favorite%2C%20casual%20family-friendly%20restaurants%20in%20Chinatown%2C%20San%20Francisco" target="_blank" rel="noopener">Hip, local favorite restaurants</a><a href="https://www.google.com/maps/search/?api=1&query=breakfast%20in%20Chinatown%2C%20San%20Francisco" target="_blank" rel="noopener">Breakfast</a><a href="https://www.google.com/maps/search/?api=1&query=coffee%20and%20tea%20in%20Chinatown%2C%20San%20Francisco" target="_blank" rel="noopener">Coffee &amp; tea</a><a href="https://www.google.com/maps/search/?api=1&query=sweet%20treats%2C%20bakeries%2C%20ice%20cream%20and%20desserts%20in%20Chinatown%2C%20San%20Francisco" target="_blank" rel="noopener">Sweet treats</a><a href="https://www.google.com/maps/search/?api=1&query=breweries%20in%20Chinatown%2C%20San%20Francisco" target="_blank" rel="noopener">Breweries</a></div>
+    </div>
+    <div class="card">
+      <h3>Japantown</h3>
+      <p class="mono">Mon 11/23</p>
+      <div class="links"><a href="https://www.google.com/maps/search/?api=1&query=thrift%2C%20antique%2C%20unique%2C%20or%20interesting%20shops%20in%20Japantown%2C%20San%20Francisco" target="_blank" rel="noopener">Thrift, antique, unique shops</a><a href="https://www.google.com/maps/search/?api=1&query=hip%2C%20local%20favorite%2C%20casual%20family-friendly%20restaurants%20in%20Japantown%2C%20San%20Francisco" target="_blank" rel="noopener">Hip, local favorite restaurants</a><a href="https://www.google.com/maps/search/?api=1&query=breakfast%20in%20Japantown%2C%20San%20Francisco" target="_blank" rel="noopener">Breakfast</a><a href="https://www.google.com/maps/search/?api=1&query=coffee%20and%20tea%20in%20Japantown%2C%20San%20Francisco" target="_blank" rel="noopener">Coffee &amp; tea</a><a href="https://www.google.com/maps/search/?api=1&query=sweet%20treats%2C%20bakeries%2C%20ice%20cream%20and%20desserts%20in%20Japantown%2C%20San%20Francisco" target="_blank" rel="noopener">Sweet treats</a><a href="https://www.google.com/maps/search/?api=1&query=breweries%20in%20Japantown%2C%20San%20Francisco" target="_blank" rel="noopener">Breweries</a></div>
+    </div>
+    <div class="card">
+      <h3>Hayes Valley</h3>
+      <p class="mono">Not on a day yet</p>
+      <div class="links"><a href="https://www.google.com/maps/search/?api=1&query=thrift%2C%20antique%2C%20unique%2C%20or%20interesting%20shops%20in%20Hayes%20Valley%2C%20San%20Francisco" target="_blank" rel="noopener">Thrift, antique, unique shops</a><a href="https://www.google.com/maps/search/?api=1&query=hip%2C%20local%20favorite%2C%20casual%20family-friendly%20restaurants%20in%20Hayes%20Valley%2C%20San%20Francisco" target="_blank" rel="noopener">Hip, local favorite restaurants</a><a href="https://www.google.com/maps/search/?api=1&query=breakfast%20in%20Hayes%20Valley%2C%20San%20Francisco" target="_blank" rel="noopener">Breakfast</a><a href="https://www.google.com/maps/search/?api=1&query=coffee%20and%20tea%20in%20Hayes%20Valley%2C%20San%20Francisco" target="_blank" rel="noopener">Coffee &amp; tea</a><a href="https://www.google.com/maps/search/?api=1&query=sweet%20treats%2C%20bakeries%2C%20ice%20cream%20and%20desserts%20in%20Hayes%20Valley%2C%20San%20Francisco" target="_blank" rel="noopener">Sweet treats</a><a href="https://www.google.com/maps/search/?api=1&query=breweries%20in%20Hayes%20Valley%2C%20San%20Francisco" target="_blank" rel="noopener">Breweries</a></div>
+    </div>
+    <div class="card">
+      <h3>Fisherman's Wharf and Pier 39</h3>
+      <p class="mono">Mon 11/23 and Wed 11/25</p>
+      <div class="links"><a href="https://www.google.com/maps/search/?api=1&query=thrift%2C%20antique%2C%20unique%2C%20or%20interesting%20shops%20in%20Fisherman%27s%20Wharf%2C%20San%20Francisco" target="_blank" rel="noopener">Thrift, antique, unique shops</a><a href="https://www.google.com/maps/search/?api=1&query=hip%2C%20local%20favorite%2C%20casual%20family-friendly%20restaurants%20in%20Fisherman%27s%20Wharf%2C%20San%20Francisco" target="_blank" rel="noopener">Hip, local favorite restaurants</a><a href="https://www.google.com/maps/search/?api=1&query=breakfast%20in%20Fisherman%27s%20Wharf%2C%20San%20Francisco" target="_blank" rel="noopener">Breakfast</a><a href="https://www.google.com/maps/search/?api=1&query=coffee%20and%20tea%20in%20Fisherman%27s%20Wharf%2C%20San%20Francisco" target="_blank" rel="noopener">Coffee &amp; tea</a><a href="https://www.google.com/maps/search/?api=1&query=sweet%20treats%2C%20bakeries%2C%20ice%20cream%20and%20desserts%20in%20Fisherman%27s%20Wharf%2C%20San%20Francisco" target="_blank" rel="noopener">Sweet treats</a><a href="https://www.google.com/maps/search/?api=1&query=breweries%20in%20Fisherman%27s%20Wharf%2C%20San%20Francisco" target="_blank" rel="noopener">Breweries</a></div>
+    </div>
+    <div class="card">
+      <h3>Nob Hill (the hotel)</h3>
+      <p class="mono">Near the hotel</p>
+      <div class="links"><a href="https://www.google.com/maps/search/?api=1&query=thrift%2C%20antique%2C%20unique%2C%20or%20interesting%20shops%20in%20Nob%20Hill%2C%20San%20Francisco" target="_blank" rel="noopener">Thrift, antique, unique shops</a><a href="https://www.google.com/maps/search/?api=1&query=hip%2C%20local%20favorite%2C%20casual%20family-friendly%20restaurants%20in%20Nob%20Hill%2C%20San%20Francisco" target="_blank" rel="noopener">Hip, local favorite restaurants</a><a href="https://www.google.com/maps/search/?api=1&query=breakfast%20in%20Nob%20Hill%2C%20San%20Francisco" target="_blank" rel="noopener">Breakfast</a><a href="https://www.google.com/maps/search/?api=1&query=coffee%20and%20tea%20in%20Nob%20Hill%2C%20San%20Francisco" target="_blank" rel="noopener">Coffee &amp; tea</a><a href="https://www.google.com/maps/search/?api=1&query=sweet%20treats%2C%20bakeries%2C%20ice%20cream%20and%20desserts%20in%20Nob%20Hill%2C%20San%20Francisco" target="_blank" rel="noopener">Sweet treats</a><a href="https://www.google.com/maps/search/?api=1&query=breweries%20in%20Nob%20Hill%2C%20San%20Francisco" target="_blank" rel="noopener">Breweries</a></div>
+    </div>
+    <div class="card">
+      <h3>Clement Street (Inner Richmond)</h3>
+      <p class="mono">Mon 11/23 optional</p>
+      <div class="links"><a href="https://www.google.com/maps/search/?api=1&query=thrift%2C%20antique%2C%20unique%2C%20or%20interesting%20shops%20in%20Clement%20Street%2C%20Inner%20Richmond%2C%20San%20Francisco" target="_blank" rel="noopener">Thrift, antique, unique shops</a><a href="https://www.google.com/maps/search/?api=1&query=hip%2C%20local%20favorite%2C%20casual%20family-friendly%20restaurants%20in%20Clement%20Street%2C%20Inner%20Richmond%2C%20San%20Francisco" target="_blank" rel="noopener">Hip, local favorite restaurants</a><a href="https://www.google.com/maps/search/?api=1&query=breakfast%20in%20Clement%20Street%2C%20Inner%20Richmond%2C%20San%20Francisco" target="_blank" rel="noopener">Breakfast</a><a href="https://www.google.com/maps/search/?api=1&query=coffee%20and%20tea%20in%20Clement%20Street%2C%20Inner%20Richmond%2C%20San%20Francisco" target="_blank" rel="noopener">Coffee &amp; tea</a><a href="https://www.google.com/maps/search/?api=1&query=sweet%20treats%2C%20bakeries%2C%20ice%20cream%20and%20desserts%20in%20Clement%20Street%2C%20Inner%20Richmond%2C%20San%20Francisco" target="_blank" rel="noopener">Sweet treats</a><a href="https://www.google.com/maps/search/?api=1&query=breweries%20in%20Clement%20Street%2C%20Inner%20Richmond%2C%20San%20Francisco" target="_blank" rel="noopener">Breweries</a></div>
+    </div>
+  </div>
+</section>
+
+<section aria-labelledby="places-h">
+  <div class="sec-head"><h2 id="places-h">Places on the list</h2>
+    <div class="chips" id="chips" role="group" aria-label="Filter places"></div></div>
+  <div class="grid" id="grid"></div>
+</section>
+
+<section aria-labelledby="music-h" style="margin-top:28px">
+  <div class="sec-head"><h2 id="music-h">Live music and venues</h2><span class="note-small">Check the dates you are there. Many venues are 21+, so look at each listing's age policy.</span></div>
+  <div class="ess">
+    <div class="card">
+      <h3>Live music calendars</h3>
+      <p>Listings of shows by date. Look at Mon 11/23 to Sat 11/28. Thanksgiving night is usually quiet.</p>
+      <div class="links" style="flex-direction:column;gap:6px"><a href="https://www.sfstation.com/music/calendar" target="_blank" rel="noopener">SF Station music calendar</a>
+        <a href="https://songkick.com/en/metro-areas/26330-us-sf-bay-area/november-2026" target="_blank" rel="noopener">Songkick: Bay Area, November 2026</a>
+        <a href="https://www.san-francisco.events/concerts/november/" target="_blank" rel="noopener">San Francisco concerts, November 2026</a>
+        <a href="https://www.sfbayareaconcerts.com/p/concert-calendar.html" target="_blank" rel="noopener">SF Bay Area concert calendar</a>
+        <a href="https://www.sftourismtips.com/san-francisco-live-music.html" target="_blank" rel="noopener">SF Tourism Tips: live music guide</a></div>
+    </div>
+    <div class="card">
+      <h3>Find venues on Google Maps</h3>
+      <p>Live Google Maps searches. Open a venue's listing for its upcoming shows and age policy.</p>
+      <div class="links" style="flex-direction:column;gap:6px"><a href="https://www.google.com/maps/search/?api=1&query=live%20music%20venues%20in%20San%20Francisco" target="_blank" rel="noopener">Live music venues, San Francisco</a>
+        <a href="https://www.google.com/maps/search/?api=1&query=live%20music%20venues%20near%20Nob%20Hill%2C%20San%20Francisco" target="_blank" rel="noopener">Live music near the hotel (Nob Hill)</a>
+        <a href="https://www.google.com/maps/search/?api=1&query=live%20music%20bars%20and%20venues%20in%20North%20Beach%2C%20San%20Francisco" target="_blank" rel="noopener">Live music in North Beach</a>
+        <a href="https://www.google.com/maps/search/?api=1&query=live%20music%20venues%20in%20Haight-Ashbury%2C%20San%20Francisco" target="_blank" rel="noopener">Live music in Haight-Ashbury</a>
+        <a href="https://www.google.com/maps/search/?api=1&query=live%20music%20venues%20in%20the%20Mission%20District%2C%20San%20Francisco" target="_blank" rel="noopener">Live music in the Mission</a>
+        <a href="https://www.google.com/maps/search/?api=1&query=jazz%20clubs%20in%20San%20Francisco" target="_blank" rel="noopener">Jazz clubs</a></div>
+    </div>
+  </div>
+</section>
+
+<footer>Hours come from Google listings and can change, especially around Thanksgiving. Check each place before you go. Times marked suggested are my own pacing, not reservations. Pack layers and a light rain shell: late November runs cool and can be wet.</footer>
+</div>
+
+<script>
+(function(){
+var KX=2370,KY=3000,LON0=-122.60,LAT0=37.925,W=560,H=690;
+function P(lat,lon){return [(lon-LON0)*KX,(LAT0-lat)*KY];}
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
+
+var PL={
+ hotel:{n:"Stanford Court",cat:"stay",lat:37.7917912,lon:-122.4096137,addr:"905 California St",site:"http://www.stanfordcourt.com/",cid:"13236050428154665116",hours:"",note:"Your hotel. Cable cars stop right outside."},
+ wharf:{n:"Fisherman's Wharf sign",cat:"meet",lat:37.8081,lon:-122.4155,addr:"2820 Taylor St",site:"",cid:"",hours:"",note:"Muir Woods tour meeting point. The pin is approximate."},
+ muir:{n:"Muir Woods National Monument",cat:"see",lat:37.897,lon:-122.5811,addr:"Muir Woods Rd, Mill Valley",site:"https://www.nps.gov/muwo",cid:"",hours:"",note:"Reached by tour bus. Bring layers. Entry is $15 per adult, not in the tour price."},
+ japancenter:{n:"Japan Center Malls",cat:"shop",lat:37.7852778,lon:-122.4294444,addr:"1737 Post St",site:"https://www.sfjapantown.org/japan-center-malls/",cid:"7660937949830972795",hours:"Daily 8:30 AM to 11 PM (Sun to 10)",note:"Stationery, kawaii shops, beauty products and a food court."},
+ kino:{n:"Kinokuniya Bookstore",cat:"shop",lat:37.7849544,lon:-122.4317274,addr:"Japan Center, 1581 Webster St",site:"https://usa.kinokuniya.com/",cid:"8232885065246621661",hours:"Daily 10:30 AM to 8 PM",note:"Manga downstairs, Japanese books and magazines, a Totoro corner."},
+ greenapple:{n:"Green Apple Books",cat:"shop",lat:37.783056,lon:-122.4647154,addr:"506 Clement St",site:"https://greenapplebooks.com/",cid:"10301952828973867919",hours:"Daily 10 AM to 9 PM",note:"Maze of new and used books with handwritten staff picks."},
+ burma:{n:"Burma Superstar",cat:"eat",lat:37.782814,lon:-122.4625643,addr:"309 Clement St",site:"http://www.burmasuperstar.com/",cid:"10744315307919991702",hours:"Lunch 11:30 to 3, dinner 5 to 9:30 (Fri, Sat to 10)",note:"Popular. A reservation helps."},
+ buffalo:{n:"Buffalo Exchange",cat:"shop",lat:37.769771,lon:-122.4479022,addr:"1555 Haight St",site:"https://www.buffaloexchange.com/locations/san-francisco/haight-st/",cid:"10295254873427368161",hours:"Daily 11 AM to 8 PM (Sun to 7)",note:"Thrift and vintage anchor on Haight. Most items run about $15 to $25."},
+ amoeba:{n:"Amoeba Music",cat:"shop",lat:37.7691943,lon:-122.4526678,addr:"1855 Haight St",site:"http://www.amoeba.com/",cid:"5348616860751077692",hours:"Daily 11 AM to 7 PM",note:"Huge record shop with bargain CD bins. Dog friendly."},
+ conserv:{n:"Conservatory of Flowers",cat:"see",lat:37.7726187,lon:-122.4602558,addr:"100 John F Kennedy Dr, Golden Gate Park",site:"https://gggp.org/conservatory-of-flowers/",cid:"5547410775768857631",hours:"10 AM to 4:30 PM. Closed Wednesdays",note:"Victorian glasshouse with lily ponds and rainforest plants."},
+ jtg:{n:"Japanese Tea Garden",cat:"see",lat:37.7700913,lon:-122.4704359,addr:"75 Hagiwara Tea Garden Dr, Golden Gate Park",site:"https://gggp.org/japanese-tea-garden/",cid:"13813273526965676727",hours:"Daily 9 AM to 5 PM",note:"Koi ponds, bridges and a tea house. Admission is charged."},
+ liguria:{n:"Liguria Bakery",cat:"eat",lat:37.801528,lon:-122.4092657,addr:"1700 Stockton St",site:"",cid:"11350873092664928153",hours:"7 AM to noon. Closed Sun and Mon",note:"Focaccia, about $10 a loaf. Rosemary garlic is the favorite. It sells out, so go early."},
+ pier33:{n:"Alcatraz City Cruises, Pier 33",cat:"see",lat:37.8065008,lon:-122.4045268,addr:"Pier 33, Alcatraz Landing",site:"https://alcatrazcitycruises.com/",cid:"691066223179062611",hours:"Check in by 10:05 AM for the 10:35 ferry",note:"The only ferry that lands on the island."},
+ alcatraz:{n:"Alcatraz Island",cat:"see",lat:37.827,lon:-122.423,addr:"San Francisco Bay",site:"https://www.nps.gov/alca",cid:"",hours:"Closed Thanksgiving Day",note:"Cellhouse audio tour is included. It is cold and windy, so dress in layers."},
+ citylights:{n:"City Lights Booksellers",cat:"shop",lat:37.7976271,lon:-122.4066213,addr:"261 Columbus Ave",site:"https://citylights.com/",cid:"11740907791137654846",hours:"Daily 10 AM to 10 PM",note:"Beat Generation landmark. The poetry room is upstairs."},
+ beat:{n:"The Beat Museum",cat:"see",lat:37.7980878,lon:-122.4061951,addr:"540 Broadway",site:"http://www.kerouac.com/",cid:"1278878583591726099",hours:"Hours not listed. Check the site",note:"Small museum with Kerouac memorabilia, across the street from City Lights."},
+ paxton:{n:"Paxton Gate",cat:"shop",lat:37.759634,lon:-122.4216738,addr:"824 Valencia St",site:"http://www.paxtongate.com/",cid:"16265401016049517505",hours:"11 AM to 7 PM. Closed Tuesdays",note:"Cabinet of curiosities: taxidermy, specimens, terrariums."},
+ clarion:{n:"Clarion Alley murals",cat:"see",lat:37.7629824,lon:-122.4207943,addr:"Clarion Alley",site:"http://clarionalleymuralproject.org/",cid:"5899656399032971229",hours:"Open 24 hours",note:"Murals change every few months. Walk it slowly."},
+ humphry:{n:"Humphry Slocombe",cat:"eat",lat:37.7528564,lon:-122.4121197,addr:"2790A Harrison St",site:"http://www.humphryslocombe.com/",cid:"240839992591852071",hours:"Hours not listed. Check the site",note:"Odd, good ice cream. Free samples. Skip buying pints here."},
+ dolores:{n:"Mission Dolores Park",cat:"see",lat:37.7602015,lon:-122.4267959,addr:"Dolores St and 19th St",site:"http://sfrecpark.org/destination/mission-dolores-park/",cid:"11968567728930983264",hours:"Daily 6 AM to 10 PM",note:"Skyline views from the lawn."},
+ unclevito:{n:"Uncle Vito's Pizza",cat:"eat",near:"dinner",lat:37.7902839,lon:-122.4089827,addr:"700 Bush St",site:"",pid:"ChIJkVLoONZ_j4ARx2vJ4umERnI",hours:"Sunday 5 to 10 PM",note:"Old-school Italian pizzeria, rated 4.3 from over 2,200 reviews. Reviewers say the pizzas are big enough to share and the staff are friendly. Order at the table or take it to go. About 0.3 miles from the hotel."},
+ nobhilldeli:{n:"Nob Hill Deli",cat:"store",near:"store",lat:37.7909295,lon:-122.4087726,addr:"660 Powell St",site:"",pid:"ChIJv1jzpieBhYARVQVzTADt5c4",hours:"Daily 9 AM to midnight",note:"Snacks, drinks, wine and chocolate. Open the latest."},
+ bushmarket:{n:"Bush Market",cat:"store",near:"store",lat:37.7900504,lon:-122.4108637,addr:"820 Bush St",site:"",pid:"ChIJI6Dsxo2AhYAR4Fy3Xp7QCa8",hours:"Daily 8 AM to 10 PM",note:"Small grocery with organic produce, baked goods and gluten-free options. Closest to the hotel."},
+ pinejones:{n:"Pine & Jones Market",cat:"store",near:"store",lat:37.7905499,lon:-122.4141127,addr:"1100 Pine St",site:"",pid:"ChIJy3PYipKAhYARqFANeR1t5Js",hours:"Daily 9 AM to 10 PM (Fri and Sat to midnight)",note:"Convenience store with a deli. Reviewers recommend the sandwiches."},
+ jwmarket:{n:"J & W Market",cat:"store",near:"store",lat:37.7911668,lon:-122.407674,addr:"723 Pine St",site:"",pid:"ChIJGwgoDYyAhYARo1IgW8-ob6Q",hours:"Daily 9 AM to 9 PM",note:"Fruit, toiletries, snacks, sparkling water and cheese."},
+ vjgrocery:{n:"V J Grocery",cat:"store",near:"store",lat:37.7933034,lon:-122.4127121,addr:"1199 Clay St",site:"",pid:"ChIJK4GIVe2AhYARmbJKnmuglXk",hours:"Daily 8:30 AM to 8 PM",note:"Corner market with staples, fruit and drinks. Pay cash, since small card charges can be refused."},
+ wave:{n:"The Wave Organ",cat:"see",near:"reel",lat:37.8085486,lon:-122.440131,addr:"83 Marina Green Dr",site:"",pid:"ChIJ4e_eTCmBhYARKs37VQo82FA",hours:"Open 24 hours",note:"Free wave-powered sculpture on a jetty at the east end of the Marina Green. It is loudest around high tide, so check a tide chart. Windy and cold on the water, so bring a jacket. Reviewers say the Golden Gate Bridge view is good, and the Palace of Fine Arts is a short walk away."},
+ castillito:{n:"El Castillito",cat:"eat",near:"reel",lat:37.7687639,lon:-122.4293081,addr:"136 Church St",site:"",pid:"ChIJT-F2BB5-j4ARiT9-VLUWApA",hours:"Daily 10 AM to 8:45 PM",note:"Cheap, no-frills burrito counter, rated 4.4 from over 1,100 reviews. You order at a window and pick up. It is small with little seating, so take it to go or come off-peak. Reviewers praise the carne asada and al pastor super burritos. About 0.6 miles from Dolores Park."},
+ sutro:{n:"Sutro Baths",cat:"see",near:"reel",lat:37.7804444,lon:-122.51365,addr:"1004 Point Lobos Ave",site:"",pid:"ChIJszBPbLWHhYARfrlLxEb3GuA",hours:"Open 24 hours",note:"Ruins of a huge old bathhouse beside the Pacific at Lands End. Free. It is a steep walk down and back up, so wear real shoes. Windy and cold, so bring a jacket. Best in late-afternoon light, with sunset around 5 PM that week. About 5.8 miles from the hotel."},
+ sfmoma:{n:"Giant Arc at SFMOMA",cat:"see",near:"reel",lat:37.7857182,lon:-122.4010508,addr:"151 3rd St",site:"https://www.sfmoma.org/exhibition/jacob-hashimoto-giant-arc/",pid:"ChIJ53I1Yn2AhYAR_Vl1vNygfMg",hours:"Mon, Tue, Fri to Sun 10 AM to 5 PM. Thu noon to 8 PM. Closed Wed",note:"Jacob Hashimoto's canopy of more than 75,000 handmade kites fills the free ground-floor Roberts Family Gallery. You can walk through it and lie underneath. Check Thanksgiving Day hours before counting on Thursday. About 0.6 miles from the hotel."},
+ umbrella:{n:"Umbrella Alley",cat:"see",near:"reel",lat:37.8081666,lon:-122.418575,addr:"366 Jefferson St",site:"",pid:"ChIJ7UcV5XOBhYAR2GY2CLX72eM",hours:"Closed Mon to Thu. Fri 12 to 6 PM, Sat and Sun 10:30 AM to 6 PM",note:"Covered alley of colorful umbrella murals, a popular photo spot. Reviewers say entry is a $5 per person donation for the artists. Closed Monday through Thursday, so only Friday afternoon works that week. About 0.3 miles from Pier 39."},
+ aquarium:{n:"Aquarium of the Bay",cat:"see",lat:37.8086487,lon:-122.4093299,addr:"Pier 39, The Embarcadero at Beach St",site:"",pid:"ChIJr6OmefyAhYAR-h8_vW9p5GQ",hours:"Daily 10 AM to 5 PM",note:"Underwater tunnels with sharks and rays, plus river otters and touch pools. Reviewers say it takes about an hour. One cited roughly $30 per adult, so check the price. About 0.3 miles from Pier 33."},
+ boudin:{n:"Boudin Bakery Cafe",cat:"eat",lat:37.8088086,lon:-122.409821,addr:"Pier 39, Beach St Space 5-Q",site:"",pid:"ChIJ1y_042CBhYAR1CgB07Gjk0A",hours:"Daily 8:30 AM to 9 PM (Fri and Sat to 10)",note:"Clam chowder in a sourdough bread bowl, plus sandwiches and pastries. Busy when Alcatraz tours return, with waits of about 15 to 20 minutes and indoor and covered outdoor seating. About 0.35 miles from Pier 33."},
+ biscoff:{n:"Biscoff Coffee Corner",cat:"eat",lat:37.8087627,lon:-122.4099841,addr:"39 Pier 39",site:"",pid:"ChIJHSGzi_yAhYARXxruUwLoLhg",hours:"Daily 8 AM to 9 PM",note:"Biscoff lattes, croissants and cheesecake. Reviewers call it the only official Biscoff cafe in the US. It is a grab-and-go counter with no seating, often a long line, and pricey. About 0.35 miles from Pier 33."},
+ maze:{n:"Magowan's Infinite Mirror Maze",cat:"see",lat:37.8100217,lon:-122.4102399,addr:"Pier 39, 0-11 Beach St",site:"",pid:"ChIJdebafPyAhYARoRPEzrlQ5Tw",hours:"Daily 10 AM to 8 PM",note:"Mirror maze with neon lights. Reviewers say $10 per person and about 15 minutes, and you can go through again. You wear gloves so you do not leave fingerprints. About 0.4 miles from Pier 33."},
+ hearts:{n:"Hearts in San Francisco",cat:"see",lat:37.8112904,lon:-122.4108092,addr:"Pier 39",site:"",pid:"ChIJ9_AqVB-BhYAR_Agoe4CBgA0",hours:"Always open, per reviewers",note:"Free heart sculptures on Pier 39 with views of Alcatraz, the Golden Gate Bridge and the sea lions. A popular photo spot, busiest on weekends. About 0.5 miles from Pier 33."},
+ musee:{n:"Musée Mécanique",cat:"see",lat:37.8093037,lon:-122.4159684,addr:"Pier 45",site:"",pid:"ChIJCQAzVOKAhYARuOpiALmomu0",hours:"Daily 10 AM to 8 PM",note:"Free to enter. Vintage arcade machines and mechanical games, most costing a quarter or two to play, so bring a few dollars in change. Right by Monday's Wharf meeting point."},
+ ghirardelli:{n:"Ghirardelli Square",cat:"shop",lat:37.8059329,lon:-122.4232589,addr:"900 North Point St",site:"",pid:"ChIJvXl2weCAhYARjSxnhzrBfNc",hours:"Daily 9 AM to 10 PM (Fri and Sat to 11)",note:"Chocolate shop and ice cream counter where you can pick and mix your own chocolates. Reviewers say it is more of a store and cafe than a factory tour. About 0.4 miles from Monday's Wharf meeting point."},
+ sunsetdunes:{n:"Sunset Dunes",cat:"see",lat:37.7528214,lon:-122.5089339,addr:"Great Hwy, near Sloat Blvd",site:"",pid:"ChIJjQ3rDQCHhYARPKfKhQMle6E",hours:"Open 24 hours",note:"Oceanfront park on the former Great Highway, with playgrounds, art and benches facing the Pacific. The Shipwreck Cove playground is here, with sand play and musical features. Best around sunset, about 5 PM that week. Windy and cold, so bring a jacket. About 1.5 miles past the west end of Golden Gate Park."},
+ portals:{n:"Portals of the Past + Lloyd Lake",cat:"see",lat:37.7707129,lon:-122.4824946,addr:"Lloyd Lake, Golden Gate Park",site:"",pid:"ChIJGz5sXTmHhYARJbar5zLBUnA",hours:"Open daily",note:"Stone columns that survived the 1906 earthquake, standing by a quiet lake. Reviewers call it a good photo spot with turtles and birds on the water. Free."},
+ threegems:{n:"Three Gems by James Turrell",cat:"see",lat:37.7709141,lon:-122.4697028,addr:"de Young sculpture garden, 50 Hagiwara Tea Garden Dr",site:"",pid:"ChIJJ7sLAGqHhYARWReEYuSI1AI",hours:"Tue to Sun 9:30 AM to 5:15 PM (closed Mon)",note:"Free skyspace you enter through a short tunnel and sit inside while you watch the sky. Reviewers say the LED lights no longer turn on, so it is quieter than it sounds. Right next to the Japanese Tea Garden."},
+ inacoolbrith:{n:"Ina Coolbrith Park",cat:"see",lat:37.7982745,lon:-122.4134592,addr:"Vallejo St at Taylor St",site:"",pid:"ChIJdx6kBe6AhYARsPFmpUAvvcY",hours:"Daily 5 AM to midnight",note:"Small hillside park with views of the skyline, Bay Bridge and Alcatraz. Rated 4.8. Reviewers say the climb up is steep. Good at golden hour, and a short walk from North Beach."},
+ bernal:{n:"Bernal Heights Park",cat:"see",lat:37.7430272,lon:-122.4136408,addr:"Bernal Heights Blvd",site:"",pid:"ChIJXfZJOaB_j4ARqpK7DW1C0JE",hours:"Daily 5 AM to midnight",note:"Hilltop with 360-degree views of the city and bay, and fewer crowds than Twin Peaks. Windy, so bring a layer. The walk to the top is uphill. About 1.5 miles from the Mission District."},
+ ggoverlook:{n:"Golden Gate Overlook",cat:"see",near:"reel",lat:37.8039661,lon:-122.4766776,addr:"Langdon Ct, Presidio",site:"",pid:"ChIJK3q_Ge-GhYARwneFylVaGio",hours:"Open 24 hours",note:"Quiet Presidio viewpoint for the Golden Gate Bridge, framed by cypress trees. Reviewers say it is less crowded than the other bridge spots and best in the morning or late afternoon. Windy, so bring a jacket. Far northwest of the hotel, about 5 miles."},
+ funston:{n:"Fort Funston",cat:"see",near:"reel",lat:37.7195436,lon:-122.5028052,addr:"Fort Funston Rd",site:"",pid:"ChIJazyNlAR9j4ARzE6pzUtJWyw",hours:"Daily 7 AM to 9 PM",note:"Coastal bluffs, sandy trails and Pacific views, famous for hang gliders and off-leash dogs. Rated 4.8 from over 4,000 reviews. Reviewers mention a steep walk down to the beach, so allow extra time. About 7 miles from the hotel."},
+ hikari:{n:"Hikari Bullet Train Sushi & Bar",cat:"eat",lat:37.7856117,lon:-122.4304894,addr:"1734 Post St",site:"",pid:"ChIJoeSh17iAhYARoPm11rjW2nE",hours:"Mon 11:30 AM to 8:30 PM",note:"Order on a tablet and the sushi arrives on a bullet-train track, with a serving robot for hot dishes. Reviewers say the fish is fresh and it is fun for teens. Nigiri was about $7 for 2 pieces. Across the street from Japan Center."},
+ izumi:{n:"Izumi Kaiten Sushi",cat:"eat",lat:37.7852865,lon:-122.4304236,addr:"Japan Center, 1737 Post St #355",site:"",pid:"ChIJp6hUL4mBhYARy4LV0kueG9g",hours:"Mon 11:30 AM to 9 PM",note:"Conveyor-belt sushi inside Japan Center. Reviewers say it is affordable and lively. Plates are not labeled and plate color shows the price. Not great for large groups, so seat the four of you early."},
+ tenroku:{n:"Tenroku Sushi",cat:"eat",lat:37.785154,lon:-122.4316433,addr:"Kintetsu Mall, 1825 Post St #215",site:"",pid:"ChIJKYWs4riAhYARqwbNZHK-Y1A",hours:"Mon 11:30 AM to 9 PM",note:"Conveyor-belt sushi in the Kintetsu mall, with plate prices shown by color. A long-time regular calls the fish good. The room is tight and can be busy."},
+ kuishinbo:{n:"Kui Shin Bo",cat:"eat",lat:37.7853725,lon:-122.4294569,addr:"East mall, 22 Peace Plaza #2",site:"",pid:"ChIJN0l8xL6AhYARrlT2wxyRP24",hours:"Mon 11:30 AM to 8:30 PM",note:"Cheapest of the group. Sushi, tonkatsu, tempura and ramen, rated 4.4. Small and busy at lunch, so expect a short wait."},
+ sanppo:{n:"Sanppo Restaurant",cat:"eat",lat:37.7856746,lon:-122.4300911,addr:"1702 Post St",site:"",pid:"ChIJn1sm1LiAhYARosRri7ggk3w",hours:"Mon 11:30 AM to 10 PM",note:"Mix-and-match bento and combo plates with sushi, teriyaki, katsu and noodles, mostly under $25. Good when everyone wants something different. Open latest of the five."},
+ mugizo:{n:"Udon Mugizo",cat:"eat",lat:37.7849587,lon:-122.4321287,addr:"Japan Center, 1581 Webster St #217",site:"",pid:"ChIJNx4Y_LiAhYARFI7FDc60IAc",hours:"Mon 10:30 AM to 10 PM",note:"Handmade udon, rated 4.7 from over 2,800 reviews. Reviewers like the mentaiko cream udon, tonkotsu udon and katsu set. Small and popular, with waits of 15 to 40 minutes, so join the digital waitlist as soon as you reach Japan Center and shop while you wait. Not sushi."},
+ haightash:{n:"Haight & Ashbury corner",cat:"see",lat:37.769937,lon:-122.446851,addr:"Haight St at Ashbury St",site:"",pid:"ChIJHb5kM1OHhYAR5PxyQSEkrlg",hours:"Open street. Shops 11 AM to 7 PM",note:"The famous 1960s corner. The Welcome Haight & Ashbury souvenir shop (1500 Haight) sits on it. Reviewers say the street can feel scruffy, so go for the history and the people watching."},
+ gdhouse:{n:"Grateful Dead House",cat:"see",lat:37.7686943,lon:-122.4464306,addr:"710 Ashbury St",site:"",pid:"ChIJ00wyqqyAhYARQl1hmxeTrho",hours:"Exterior only",note:"The band's 1960s home. It is a private residence, so look from the sidewalk and stay on the street. About a 2-minute walk south of Haight and Ashbury."},
+ counterculture:{n:"Haight Ashbury Counterculture Museum",cat:"see",lat:37.7699372,lon:-122.4467492,addr:"1485 Haight St",site:"",pid:"ChIJXX78PQCHhYARxIh8fPDW0cw",hours:"Wed to Sun 11 AM to 6 PM (closed Mon and Tue)",note:"Small museum of 1960s posters, memorabilia and history, rated 4.9. Reviewers say it can take an hour or more, and the bookshop has things you will not find elsewhere. Small entry fee."},
+ psychgallery:{n:"Psychedelic SF Gallery",cat:"shop",lat:37.7701345,lon:-122.4451093,addr:"1399 Haight St",site:"",pid:"ChIJXb2ISNuBhYARYp7ECJID5nw",hours:"Thu to Sun 12 to 6 PM (closed Mon to Wed)",note:"Gallery of 1960s psychedelic poster art, blotter art and prints, rated 4.8. Reviewers say the staff are helpful. Prints and shirts for sale."},
+ haightart:{n:"Haight Street Art Center",cat:"see",lat:37.7725136,lon:-122.4261014,addr:"215 Haight St",site:"",pid:"ChIJBRvrsqGAhYARD9smcDL5Pjk",hours:"Thu to Sun 12 to 6 PM (closed Mon to Wed)",note:"Free gallery in Lower Haight. Reviewers describe a Grateful Dead exhibit with posters, album art and a mini Wall of Sound. Exhibits rotate, so check what is on. About 1.3 miles east of Haight and Ashbury, so it needs a rideshare."}
+};
+
+var DAYS=[
+ {id:"sun",tab:"Sun 22",date:"Sun 11/22",title:"Arrive and settle in",col:"none",items:[
+  {t:"4:30 PM",x:"Delta DL517 leaves Atlanta",s:"Lands at SFO at 6:30 PM",k:"booked"},
+  {t:"Evening",x:"Check in at Stanford Court",p:"hotel",k:"booked"},
+  {t:"Dinner",x:"Uncle Vito's Pizza",s:"Open until 10 PM",p:"unclevito",k:"optional"},
+  {t:"Supplies",x:"Nob Hill Deli",s:"Open until midnight",p:"nobhilldeli",k:"optional"},
+  {t:"Supplies",x:"Bush Market",s:"Open until 10 PM",p:"bushmarket",k:"optional"},
+  {t:"Supplies",x:"Pine & Jones Market",s:"Open until 10 PM",p:"pinejones",k:"optional"},
+  {t:"Supplies",x:"J & W Market",s:"Open until 9 PM",p:"jwmarket",k:"optional"},
+  {t:"Supplies",x:"V J Grocery",s:"Open until 8 PM, cash preferred",p:"vjgrocery",k:"optional"}],noroute:true},
+ {id:"mon",tab:"Mon 23",date:"Mon 11/23",title:"Muir Woods, then Japantown",col:"mon",items:[
+  {t:"8:15 AM",x:"Leave the hotel for the Wharf",s:"About 20 minutes by rideshare",p:"hotel",k:"suggested"},
+  {t:"8:45 AM",x:"Check in at the Fisherman's Wharf sign",s:"The tour leaves at 9:00 sharp",p:"wharf",k:"booked"},
+  {t:"Morning",x:"Muir Woods half-day tour",s:"Back by bus to the Wharf, or get off in Sausalito for lunch and ride the ferry back.",p:"muir",k:"booked",via:[[37.811,-122.478],[37.832,-122.4785]]},
+  {t:"After the tour",x:"Musée Mécanique",s:"Free vintage arcade right by the Wharf meeting point",p:"musee",k:"optional"},
+  {t:"After the tour",x:"Ghirardelli Square",s:"Chocolate and ice cream, about 0.4 miles from the Wharf meeting point",p:"ghirardelli",k:"optional"},
+  {t:"Afternoon",x:"Japan Center",s:"Stationery, kawaii shops, food court",p:"japancenter",k:"suggested"},
+  {t:"Afternoon",x:"Kinokuniya Bookstore",s:"Inside the Japan Center",p:"kino",k:"suggested"},
+  {t:"Late lunch or dinner",x:"Hikari Bullet Train Sushi & Bar",s:"Sushi on a bullet-train track. Open until 8:30.",p:"hikari",k:"optional"},
+  {t:"Late lunch or dinner",x:"Izumi Kaiten Sushi",s:"Conveyor-belt sushi inside Japan Center. Open until 9.",p:"izumi",k:"optional"},
+  {t:"Late lunch or dinner",x:"Tenroku Sushi",s:"Conveyor-belt sushi in the Kintetsu mall. Open until 9.",p:"tenroku",k:"optional"},
+  {t:"Late lunch or dinner",x:"Kui Shin Bo",s:"Cheapest of the five. Open until 8:30.",p:"kuishinbo",k:"optional"},
+  {t:"Late lunch or dinner",x:"Sanppo Restaurant",s:"Bento and combo plates, open until 10.",p:"sanppo",k:"optional"},
+  {t:"Late lunch or dinner",x:"Udon Mugizo",s:"Top-rated udon, not sushi. Join the waitlist on arrival.",p:"mugizo",k:"optional"},
+  {t:"Evening",x:"Green Apple Books",s:"A short rideshare away on Clement St",p:"greenapple",k:"optional"},
+  {t:"Dinner",x:"Burma Superstar",s:"Reserve ahead if you go",p:"burma",k:"optional"}]},
+ {id:"tue",tab:"Tue 24",date:"Tue 11/24",title:"The Mission",col:"tue",items:[
+  {t:"10:00 AM",x:"Leave the hotel for the Mission",p:"hotel",k:"suggested"},
+  {t:"11:00 AM",x:"Paxton Gate",s:"Opens at 11, but it is closed Tuesdays. Oddities, terrariums, specimens.",p:"paxton",k:"suggested"},
+  {t:"12:30 PM",x:"Clarion Alley murals",s:"Burritos or tacos nearby",p:"clarion",k:"suggested"},
+  {t:"2:00 PM",x:"Humphry Slocombe",s:"Ice cream",p:"humphry",k:"suggested"},
+  {t:"3:00 PM",x:"Mission Dolores Park",s:"Skyline views if the weather cooperates",p:"dolores",k:"suggested"},
+  {t:"Late afternoon",x:"Bernal Heights Park",s:"Hilltop city views about 1.5 miles from the Mission. Bring a layer.",p:"bernal",k:"optional"}]},
+ {id:"wed",tab:"Wed 25",date:"Wed 11/25",title:"Alcatraz and North Beach",col:"wed",items:[
+  {t:"8:15 AM",x:"Liguria Bakery",s:"Focaccia first. It opens at 7 and sells out.",p:"liguria",k:"suggested"},
+  {t:"9:30 AM",x:"Biscoff Coffee Corner",s:"Coffee at Pier 39 before check-in. Opens at 8, grab-and-go, often a line.",p:"biscoff",k:"optional"},
+  {t:"10:05 AM",x:"Check in at Pier 33",s:"Boarding starts 30 minutes before departure",p:"pier33",k:"booked"},
+  {t:"10:35 AM",x:"Alcatraz Day Tour ferry",s:"About 2.5 to 3 hours including the audio tour. Dress in layers.",p:"alcatraz",k:"booked"},
+  {t:"After Alcatraz",x:"Boudin Bakery Cafe",s:"Clam chowder bread bowl at Pier 39. Busy when the Alcatraz ferries return.",p:"boudin",k:"optional"},
+  {t:"After Alcatraz",x:"Aquarium of the Bay",s:"About an hour. Open until 5 PM.",p:"aquarium",k:"optional"},
+  {t:"After Alcatraz",x:"Infinite Mirror Maze",s:"About 15 minutes, $10 per person",p:"maze",k:"optional"},
+  {t:"After Alcatraz",x:"Hearts in San Francisco",s:"Free photo spot with views of Alcatraz",p:"hearts",k:"optional"},
+  {t:"Afternoon",x:"City Lights Booksellers",p:"citylights",k:"suggested"},
+  {t:"Afternoon",x:"The Beat Museum",s:"Across the street from City Lights",p:"beat",k:"suggested"},
+  {t:"Late afternoon",x:"Chinatown alleys and tea shops",s:"A short walk from North Beach",k:"suggested"},
+  {t:"Golden hour",x:"Ina Coolbrith Park",s:"Steep hillside park with skyline and Bay views",p:"inacoolbrith",k:"optional"}]},
+ {id:"thu",tab:"Thu 26",date:"Thu 11/26",title:"Thanksgiving",col:"none",items:[
+  {t:"All day",x:"Easy day",s:"Alcatraz is closed and many shops close or keep short hours. Check holiday hours before heading anywhere.",k:"open"},
+  {t:"Evening",x:"Thanksgiving dinner",s:"No reservation yet. Many places book up or run a set menu.",k:"open"}]},
+ {id:"fri",tab:"Fri 27",date:"Fri 11/27",title:"Haight-Ashbury and Golden Gate Park",col:"fri",items:[
+  {t:"10:00 AM",x:"Leave the hotel for Haight",p:"hotel",k:"suggested"},
+  {t:"11:00 AM",x:"Buffalo Exchange",s:"Opens at 11. Work the street from Masonic toward the park.",p:"buffalo",k:"suggested"},
+  {t:"11:30 AM",x:"Haight & Ashbury corner",s:"The famous intersection. Welcome Haight & Ashbury shop is on it.",p:"haightash",k:"suggested"},
+  {t:"11:45 AM",x:"Counterculture Museum",s:"Open 11 to 6, closed Mon and Tue. About an hour.",p:"counterculture",k:"suggested"},
+  {t:"12:30 PM",x:"Psychedelic SF Gallery",s:"Poster art. Opens at noon, closed Mon to Wed.",p:"psychgallery",k:"suggested"},
+  {t:"12:45 PM",x:"Grateful Dead House",s:"710 Ashbury, a short walk south. Look from the sidewalk only.",p:"gdhouse",k:"suggested"},
+  {t:"Midday",x:"Amoeba Music",s:"Lunch on Haight nearby",p:"amoeba",k:"suggested"},
+  {t:"Optional",x:"Haight Street Art Center",s:"Free Grateful Dead poster exhibit in Lower Haight, a rideshare east. Open 12 to 6, closed Mon to Wed.",p:"haightart",k:"optional"},
+  {t:"1:30 PM",x:"Conservatory of Flowers",s:"Open until 4:30",p:"conserv",k:"suggested"},
+  {t:"3:00 PM",x:"Japanese Tea Garden",s:"Open until 5. Tea and cookies inside.",p:"jtg",k:"suggested"},
+  {t:"4:00 PM",x:"Three Gems by James Turrell",s:"Free skyspace in the de Young garden. Open until 5:15.",p:"threegems",k:"optional"},
+  {t:"4:30 PM",x:"Portals of the Past + Lloyd Lake",s:"Free, in the park",p:"portals",k:"optional"},
+  {t:"Sunset",x:"Sunset Dunes and Shipwreck Cove",s:"Oceanfront park, sunset about 5 PM. Bring a jacket.",p:"sunsetdunes",k:"optional"}]},
+ {id:"sat",tab:"Sat 28",date:"Sat 11/28",title:"Fly home",col:"none",items:[
+  {t:"Morning",x:"Pack and check out",p:"hotel",k:"suggested"},
+  {t:"11:00 AM",x:"Leave for SFO",s:"SFO is south of the city, off this map. Allow time for bags and security.",k:"suggested"},
+  {t:"2:05 PM",x:"Delta DL513 leaves SFO",s:"Lands in Atlanta at 9:42 PM",k:"booked"}]},
+ {id:"reels",tab:"From Reels",date:"From Reels",title:"Saved from Instagram",col:"reel",noroute:true,reel:true,items:[]}
+];
+
+var state={day:"all",sel:null,filter:"all",view:null};
+var KIND={booked:"Booked",suggested:"Suggested",optional:"Optional",open:"To decide",saved:"Saved"};
+var CAT={eat:"Eat",shop:"Shop",see:"See",stay:"Stay",meet:"Meeting point",store:"Store"};
+Object.keys(PL).forEach(function(id){var p=PL[id];if(p.near==="reel")dayById("reels").items.push({t:CAT[p.cat]||"",x:p.n,s:p.hours,p:id,k:"saved"});});
+
+function dayById(id){for(var i=0;i<DAYS.length;i++)if(DAYS[i].id===id)return DAYS[i];return null;}
+function gm(p){if(p.pid)return "https://www.google.com/maps/search/?api=1&query="+encodeURIComponent(p.n+" "+p.addr+" San Francisco")+"&query_place_id="+p.pid;return p.cid?"https://maps.google.com/?cid="+p.cid:"https://www.google.com/maps/search/?api=1&query="+encodeURIComponent(p.n+" "+p.addr+" San Francisco");}
+function dayStops(d){var seen={},out=[];d.items.forEach(function(it){if(it.p&&!seen[it.p]){seen[it.p]=1;out.push(it.p);}});return out;}
+function firstDayOf(id){for(var i=0;i<DAYS.length;i++){if(dayStops(DAYS[i]).indexOf(id)>-1&&id!=="hotel")return DAYS[i];}return null;}
+function daysOf(id){return DAYS.filter(function(d){return !d.reel&&d.items.some(function(it){return it.p===id;});});}
+
+/* ---------- map ---------- */
+var LAND_SF=[[-122.477,37.8106],[-122.484,37.793],[-122.511,37.786],[-122.511,37.77],[-122.509,37.74],[-122.5035,37.71],[-122.5035,37.69],[-122.385,37.69],[-122.385,37.711],[-122.387,37.73],[-122.388,37.76],[-122.389,37.77],[-122.388,37.787],[-122.393,37.795],[-122.401,37.803],[-122.4095,37.809],[-122.418,37.8095],[-122.426,37.8075],[-122.44,37.8062],[-122.46,37.8072]];
+var LAND_MARIN=[[-122.478,37.832],[-122.529,37.815],[-122.54,37.831],[-122.577,37.86],[-122.6,37.885],[-122.6,37.925],[-122.46,37.925],[-122.456,37.895],[-122.478,37.883],[-122.49,37.87],[-122.485,37.859],[-122.478,37.842]];
+var LAND_ANGEL=[[-122.43,37.868],[-122.418,37.865],[-122.42,37.854],[-122.435,37.852],[-122.44,37.862]];
+var LAND_ALC=[[-122.4245,37.8275],[-122.4215,37.8278],[-122.4212,37.8262],[-122.4238,37.8258]];
+var PARK_GG=[[-122.511,37.7695],[-122.511,37.7745],[-122.454,37.7745],[-122.454,37.7695]];
+var HOODS=[["Haight-Ashbury",37.7672,-122.4425],["Golden Gate Park",37.7722,-122.487],["The Mission",37.7545,-122.4175],["Japantown",37.7815,-122.4305],["Nob Hill",37.7948,-122.4125],["North Beach",37.8045,-122.4075],["Presidio",37.7985,-122.4665],["Richmond",37.7795,-122.4835],["Marin",37.885,-122.52]];
+function poly(pts){return pts.map(function(q){var a=P(q[1],q[0]);return a[0].toFixed(1)+","+a[1].toFixed(1);}).join(" ");}
+
+function colorOf(d){return "var(--d-"+d.col+")";}
+function placeDayColor(id){var d=firstDayOf(id);return d?colorOf(d):"var(--d-none)";}
+
+function viewFor(day){
+  var d=dayById(day),pts=[];
+  if(d){
+    d.items.forEach(function(it){
+      if(it.via)it.via.forEach(function(v){pts.push(P(v[0],v[1]));});
+      if(it.p)pts.push(P(PL[it.p].lat,PL[it.p].lon));
+    });
+  }
+  if(!d||!pts.length||(dayStops(d).length===1&&dayStops(d)[0]==="hotel")){
+    if(d&&pts.length){var h=pts[0],w=W/3.2,hh=H/3.2;return {x:h[0]-w/2,y:h[1]-hh/2,w:w,h:hh,k:3.2};}
+    return {x:0,y:0,w:W,h:H,k:1};
+  }
+  var minx=1e9,maxx=-1e9,miny=1e9,maxy=-1e9;
+  pts.forEach(function(p){minx=Math.min(minx,p[0]);maxx=Math.max(maxx,p[0]);miny=Math.min(miny,p[1]);maxy=Math.max(maxy,p[1]);});
+  var pad=Math.max(maxx-minx,maxy-miny)*0.16+14;
+  var bw=maxx-minx+2*pad,bh=maxy-miny+2*pad;
+  if(bw/bh>W/H)bh=bw*H/W;else bw=bh*W/H;
+  var k=Math.min(W/bw,4.2);bw=W/k;bh=H/k;
+  return {x:(minx+maxx)/2-bw/2,y:(miny+maxy)/2-bh/2,w:bw,h:bh,k:k};
+}
+
+function renderMap(){
+  var v=state.view||viewFor(state.day),k=W/v.w,d=dayById(state.day),all=state.day==="all",zoomed=v.w<W*0.98;
+  var s='<svg viewBox="'+v.x.toFixed(1)+' '+v.y.toFixed(1)+' '+v.w.toFixed(1)+' '+v.h.toFixed(1)+'" role="group" aria-label="Schematic map" style="touch-action:'+(zoomed?'none':'pan-y')+';cursor:'+(zoomed?'grab':'default')+'">';
+  s+='<rect x="-3000" y="-3000" width="7000" height="7000" fill="var(--water)"/>';
+  var ln='stroke="var(--line)" stroke-width="1" vector-effect="non-scaling-stroke"';
+  s+='<polygon points="'+poly(LAND_SF)+'" fill="var(--land)" '+ln+'/>';
+  s+='<polygon points="'+poly(LAND_MARIN)+'" fill="var(--land)" '+ln+'/>';
+  s+='<polygon points="'+poly(LAND_ANGEL)+'" fill="var(--land)" '+ln+'/>';
+  s+='<polygon points="'+poly(LAND_ALC)+'" fill="var(--land)" '+ln+'/>';
+  s+='<polygon points="'+poly(PARK_GG)+'" fill="var(--park)" stroke="none"/>';
+  var g1=P(37.8106,-122.4775),g2=P(37.832,-122.4785),b1=P(37.789,-122.388),b2=P(37.802,-122.37);
+  s+='<line x1="'+g1[0]+'" y1="'+g1[1]+'" x2="'+g2[0]+'" y2="'+g2[1]+'" stroke="var(--accent)" stroke-width="3" vector-effect="non-scaling-stroke"/>';
+  s+='<line x1="'+b1[0]+'" y1="'+b1[1]+'" x2="'+b2[0]+'" y2="'+b2[1]+'" stroke="var(--muted)" stroke-width="2" vector-effect="non-scaling-stroke"/>';
+  var fs=(11/k).toFixed(2);
+  function lab(txt,lat,lon,extra){var a=P(lat,lon);return '<text x="'+a[0].toFixed(1)+'" y="'+a[1].toFixed(1)+'" font-size="'+fs+'" font-family="Instrument Sans, sans-serif" text-anchor="middle" '+(extra||'fill="var(--muted)"')+'>'+txt+'</text>';}
+  s+=lab("Pacific Ocean",37.76,-122.552,'fill="var(--muted)" font-style="italic"');
+  s+=lab("San Francisco Bay",37.84,-122.395,'fill="var(--muted)" font-style="italic"');
+  var ga=P(37.8215,-122.4783);
+  s+='<text x="'+(ga[0]-4/k).toFixed(1)+'" y="'+ga[1].toFixed(1)+'" font-size="'+fs+'" text-anchor="end" font-family="Instrument Sans, sans-serif" fill="var(--accent)">Golden Gate Bridge</text>';
+  if(k<2.2)HOODS.forEach(function(h){s+=lab(esc(h[0]).toUpperCase(),h[1],h[2],'fill="var(--muted)" letter-spacing="'+(0.8/k).toFixed(2)+'" opacity="0.8" font-size="'+(9.5/k).toFixed(2)+'"');});
+  if(k<2.2){s+='<g transform="translate('+(W-84)+' '+(H-26)+') scale('+(1/Math.max(k,1)).toFixed(3)+')"><text font-size="11" font-family="Instrument Sans, sans-serif" fill="var(--muted)">SFO is 14 mi south</text><path d="M30 6 L30 20 M25 15 L30 21 L35 15" stroke="var(--muted)" fill="none" stroke-width="1.4" transform="translate(30 4)"/></g>';}
+
+  /* pins */
+  var pins=[],ids=[];
+  if(all){ids=Object.keys(PL).filter(function(i){return i!=="wharf"&&!PL[i].near;});}
+  else if(d){ids=dayStops(d);}
+  var ctx=[];
+  if(!all)Object.keys(PL).forEach(function(i){if(ids.indexOf(i)<0&&i!=="hotel"&&i!=="wharf"&&!PL[i].near&&firstDayOf(i))ctx.push(i);});
+  var minD=(all?(k>=2.5?24:15):26)/k,n=0;
+  ids.forEach(function(id){var p=PL[id],a=P(p.lat,p.lon);pins.push({id:id,x:a[0],y:a[1],px:a[0],py:a[1],num:(id==="hotel"?"H":(++n))});});
+  for(var it2=0;it2<14;it2++){
+    for(var i=0;i<pins.length;i++)for(var j=i+1;j<pins.length;j++){
+      var A=pins[i],B=pins[j],dx=B.px-A.px,dy=B.py-A.py,dist=Math.sqrt(dx*dx+dy*dy);
+      if(dist<minD){if(dist<0.01){dx=0.3;dy=1;dist=1.04;}var push=(minD-dist)/2,ux=dx/dist,uy=dy/dist;A.px-=ux*push;A.py-=uy*push;B.px+=ux*push;B.py+=uy*push;}
+    }
+  }
+  /* context dots */
+  ctx.forEach(function(id){var p=PL[id],a=P(p.lat,p.lon);s+='<circle cx="'+a[0].toFixed(1)+'" cy="'+a[1].toFixed(1)+'" r="'+(3/k).toFixed(2)+'" fill="var(--muted)" opacity="0.55"><title>'+esc(p.n)+'</title></circle>';});
+  /* route */
+  if(d&&!all&&!d.noroute){
+    var rp=[];
+    d.items.forEach(function(it){if(it.via)it.via.forEach(function(q){var a=P(q[0],q[1]);rp.push(a[0].toFixed(1)+","+a[1].toFixed(1));});if(it.p){var a2=P(PL[it.p].lat,PL[it.p].lon);rp.push(a2[0].toFixed(1)+","+a2[1].toFixed(1));}});
+    if(rp.length>1)s+='<polyline points="'+rp.join(" ")+'" fill="none" stroke="'+colorOf(d)+'" stroke-width="2.5" stroke-dasharray="6 5" stroke-linecap="round" vector-effect="non-scaling-stroke" opacity="0.9"/>';
+  }
+  pins.forEach(function(q){
+    if(Math.abs(q.px-q.x)+Math.abs(q.py-q.y)>2/k){
+      s+='<line x1="'+q.x.toFixed(1)+'" y1="'+q.y.toFixed(1)+'" x2="'+q.px.toFixed(1)+'" y2="'+q.py.toFixed(1)+'" stroke="var(--ink)" stroke-width="1" vector-effect="non-scaling-stroke"/><circle cx="'+q.x.toFixed(1)+'" cy="'+q.y.toFixed(1)+'" r="'+(2.2/k).toFixed(2)+'" fill="var(--ink)"/>';
+    }
+  });
+  pins.forEach(function(q){
+    var p=PL[q.id],hot=q.id==="hotel",col=hot?"var(--ink)":(all?placeDayColor(q.id):(d?colorOf(d):"var(--d-none)")),r=all?(hot?10:7):11;
+    var onleft=q.px>v.x+v.w*0.62,lx=(onleft?-(r+6):(r+6));
+    s+='<g class="pin" tabindex="0" role="button" data-id="'+q.id+'" aria-label="'+esc(p.n)+'" transform="translate('+q.px.toFixed(1)+' '+q.py.toFixed(1)+') scale('+(1/k).toFixed(4)+')">';
+    if(state.sel===q.id)s+='<circle r="'+(r+5)+'" fill="none" stroke="var(--ink)" stroke-width="2"/>';
+    s+='<circle r="'+r+'" fill="'+col+'" stroke="var(--surface)" stroke-width="2"/>';
+    if(!all||hot)s+='<text y="4" text-anchor="middle" font-size="'+(hot?11:11)+'" font-weight="700" font-family="IBM Plex Mono, monospace" fill="'+(hot?"var(--bg)":"var(--on)")+'">'+q.num+'</text>';
+    if(!all||state.sel===q.id||hot||k>=2.5)s+='<text class="halo" x="'+lx+'" y="4" text-anchor="'+(onleft?"end":"start")+'" font-size="12" font-weight="600" font-family="Instrument Sans, sans-serif" fill="var(--ink)">'+esc(p.n)+'</text>';
+    s+='<title>'+esc(p.n)+'</title></g>';
+  });
+  s+='</svg>';
+  var m=document.getElementById("map");m.innerHTML=s;
+  Array.prototype.forEach.call(m.querySelectorAll(".pin"),function(el){
+    el.addEventListener("click",function(){select(el.getAttribute("data-id"));});
+    el.addEventListener("keydown",function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();select(el.getAttribute("data-id"));}});
+  });
+}
+
+/* ---------- detail ---------- */
+function renderDetail(){
+  var el=document.getElementById("detail"),id=state.sel;
+  if(!id){el.innerHTML='<p style="margin:0">Tap a pin or a stop to see hours, notes and links.</p>';return;}
+  var p=PL[id],h='<h3>'+esc(p.n)+'</h3><p class="mono" style="color:var(--muted)">'+esc(CAT[p.cat]||"")+(p.hours?" · "+esc(p.hours):"")+'</p>';
+  h+='<p>'+esc(p.addr)+'</p>';if(p.note)h+='<p style="color:var(--ink)">'+esc(p.note)+'</p>';
+  var ds=daysOf(id).filter(function(x){return id!=="hotel";});
+  if(ds.length)h+='<p>On the plan: '+ds.map(function(x){return esc(x.date);}).join(", ")+'</p>';
+  h+='<div class="btns">';
+  if(p.site)h+='<a class="btn" href="'+esc(p.site)+'" target="_blank" rel="noopener">Website</a>';
+  h+='<a class="btn solid" href="'+esc(gm(p))+'" target="_blank" rel="noopener">Open in Google Maps</a></div>';
+  el.innerHTML=h;
+}
+
+/* ---------- tabs and panel ---------- */
+function renderTabs(){
+  var t=document.getElementById("tabs"),h='<button class="tab" role="tab" type="button" data-day="all" aria-selected="'+(state.day==="all")+'">Week</button>';
+  DAYS.forEach(function(d){h+='<button class="tab" role="tab" type="button" data-day="'+d.id+'" aria-selected="'+(state.day===d.id)+'"><span class="dot" style="background:'+colorOf(d)+'"></span>'+d.tab+'</button>';});
+  t.innerHTML=h;
+  Array.prototype.forEach.call(t.querySelectorAll(".tab"),function(b){b.addEventListener("click",function(){setDay(b.getAttribute("data-day"));});});
+}
+function routeUrl(d){
+  var st=dayStops(d);if(st.length<2)return "";
+  function q(id){var p=PL[id];return p.n+" "+p.addr+(id==="muir"?"":" San Francisco");}
+  var u="https://www.google.com/maps/dir/?api=1&origin="+encodeURIComponent(q(st[0]))+"&destination="+encodeURIComponent(q(st[st.length-1]));
+  var mid=st.slice(1,-1);if(mid.length)u+="&waypoints="+encodeURIComponent(mid.map(q).join("|"));
+  return u;
+}
+function renderPanel(){
+  var el=document.getElementById("panel"),h="";
+  if(state.day==="all"){
+    DAYS.forEach(function(d){
+      var n=dayStops(d).filter(function(i){return i!=="hotel";}).length;
+      h+='<button type="button" class="daygo" data-day="'+d.id+'"><b><span class="dot" style="background:'+colorOf(d)+'"></span>'+esc(d.date)+'</b><span>'+esc(d.title)+(n?" · "+n+" stops":"")+'</span></button>';
+    });
+    el.innerHTML=h;
+    Array.prototype.forEach.call(el.querySelectorAll(".daygo"),function(b){b.addEventListener("click",function(){setDay(b.getAttribute("data-day"));});});
+    return;
+  }
+  var d=dayById(state.day);
+  h+='<div class="daytitle"><span class="eyebrow">'+esc(d.date)+'</span><h2>'+esc(d.title)+'</h2></div><ol class="items">';
+  d.items.forEach(function(it){
+    var title=it.p&&it.p!=="hotel"||it.p==="hotel"?'<button type="button" class="linkbtn" data-id="'+it.p+'">'+esc(it.x)+'</button>':esc(it.x);
+    if(!it.p)title=esc(it.x);
+    h+='<li><span class="time">'+esc(it.t)+'</span><div class="what"><span class="t">'+title+'</span>'+(it.s?'<span class="s">'+esc(it.s)+'</span>':'')+'<span class="tag k-'+it.k+'">'+KIND[it.k]+'</span></div></li>';
+  });
+  h+='</ol>';
+  var ru=d.noroute?"":routeUrl(d);
+  if(ru)h+='<div class="btns"><a class="btn solid" href="'+esc(ru)+'" target="_blank" rel="noopener">Open this day in Google Maps</a></div>';
+  el.innerHTML=h;
+  Array.prototype.forEach.call(el.querySelectorAll(".linkbtn"),function(b){b.addEventListener("click",function(){select(b.getAttribute("data-id"));});});
+}
+
+/* ---------- places list ---------- */
+function renderChips(){
+  var c=document.getElementById("chips"),opts=[["all","All"],["eat","Eat"],["shop","Shop"],["see","See"]],h="";
+  opts.forEach(function(o){h+='<button type="button" class="chip" data-f="'+o[0]+'" aria-pressed="'+(state.filter===o[0])+'">'+o[1]+'</button>';});
+  c.innerHTML=h;
+  Array.prototype.forEach.call(c.querySelectorAll(".chip"),function(b){b.addEventListener("click",function(){state.filter=b.getAttribute("data-f");renderChips();renderGrid();});});
+}
+function renderGrid(){
+  var g=document.getElementById("grid"),h="";
+  Object.keys(PL).forEach(function(id){
+    var p=PL[id];if(p.cat==="stay"||p.cat==="meet"||p.near||id==="alcatraz")return;
+    if(state.filter!=="all"&&p.cat!==state.filter)return;
+    var ds=daysOf(id).map(function(d){var it=d.items.filter(function(x){return x.p===id;})[0];return d.date+(it.k==="optional"?" (optional)":"");});
+    h+='<article class="pcard"><span class="meta">'+esc(CAT[p.cat])+'</span><h3>'+esc(p.n)+'</h3>';
+    if(ds.length)h+='<p class="on">'+esc(ds.join(", "))+'</p>';
+    if(p.hours)h+='<p>'+esc(p.hours)+'</p>';
+    h+='<p>'+esc(p.note)+'</p><p class="mono">'+esc(p.addr)+'</p><div class="btns">';
+    if(p.site)h+='<a class="btn" href="'+esc(p.site)+'" target="_blank" rel="noopener">Website</a>';
+    h+='<a class="btn" href="'+esc(gm(p))+'" target="_blank" rel="noopener">Google Maps</a>';
+    if(ds.length)h+='<button type="button" class="btn solid" data-show="'+id+'" style="cursor:pointer">Show on map</button>';
+    h+='</div></article>';
+  });
+  g.innerHTML=h;
+  Array.prototype.forEach.call(g.querySelectorAll("[data-show]"),function(b){b.addEventListener("click",function(){
+    var id=b.getAttribute("data-show"),d=firstDayOf(id);state.sel=id;if(d)setDay(d.id,true);
+    document.getElementById("plan-h").scrollIntoView({behavior:"smooth",block:"start"});
+  });});
+}
+
+/* ---------- near the hotel ---------- */
+function nearCard(id){
+  var p=PL[id];
+  return '<article class="pcard"><span class="meta">'+(p.near==="dinner"?"Dinner":p.near==="reel"?"From Reels · "+CAT[p.cat]:"Store")+'</span><h3>'+esc(p.n)+'</h3><p class="on">'+esc(p.hours)+'</p><p>'+esc(p.note)+'</p><p class="mono">'+esc(p.addr)+'</p><div class="btns">'+(p.site?'<a class="btn" href="'+esc(p.site)+'" target="_blank" rel="noopener">Website</a>':'')+'<a class="btn" href="'+esc(gm(p))+'" target="_blank" rel="noopener">Google Maps</a>'+(p.near==="reel"?'':'<button type="button" class="btn solid" data-show="'+id+'" style="cursor:pointer">Show on map</button>')+'</div></article>';
+}
+function renderNear(){
+  var d="",s="",r="",rn=0;
+  Object.keys(PL).forEach(function(id){var p=PL[id];if(p.near==="dinner")d+=nearCard(id);else if(p.near==="store")s+=nearCard(id);else if(p.near==="reel"){r+=nearCard(id);rn++;}});
+  document.getElementById("dgrid").innerHTML=d;document.getElementById("sgrid").innerHTML=s;
+  document.getElementById("rgrid").innerHTML=r;
+  document.getElementById("rmeta").textContent=rn+(rn===1?" place":" places")+" · not on a day yet";
+  Array.prototype.forEach.call(document.querySelectorAll("#dgrid [data-show],#sgrid [data-show]"),function(b){
+    b.addEventListener("click",function(){state.sel=b.getAttribute("data-show");setDay("sun",true);document.getElementById("plan-h").scrollIntoView({behavior:"smooth",block:"start"});});
+  });
+}
+
+/* ---------- zoom and pan ---------- */
+var MAXK=14;
+function curView(){return state.view||viewFor(state.day);}
+function clampView(v){
+  var w=Math.min(W,Math.max(W/MAXK,v.w)),h=w*H/W;
+  var cx=Math.min(W*1.1,Math.max(-W*0.1,v.x+v.w/2)),cy=Math.min(H*1.1,Math.max(-H*0.1,v.y+v.h/2));
+  return {x:cx-w/2,y:cy-h/2,w:w,h:h};
+}
+function setupZoom(){
+  var map=document.getElementById("map"),ptrs={},drag=null,pinch=null,moved=false,wheelT=null;
+  function svgEl(){return map.querySelector("svg");}
+  function apply(v){var s=svgEl();if(s)s.setAttribute("viewBox",v.x.toFixed(1)+" "+v.y.toFixed(1)+" "+v.w.toFixed(1)+" "+v.h.toFixed(1));}
+  function zoomAt(f,fx,fy,live){
+    var v=curView(),nw=Math.min(W,Math.max(W/MAXK,v.w/f)),nh=nw*H/W,px=v.x+fx*v.w,py=v.y+fy*v.h;
+    state.view=clampView({x:px-fx*nw,y:py-fy*nh,w:nw,h:nh});
+    if(live)apply(state.view);else renderMap();
+  }
+  function frac(e){var r=svgEl().getBoundingClientRect();return [(e.clientX-r.left)/r.width,(e.clientY-r.top)/r.height];}
+  document.getElementById("zin").addEventListener("click",function(){zoomAt(1.6,0.5,0.5,false);});
+  document.getElementById("zout").addEventListener("click",function(){zoomAt(1/1.6,0.5,0.5,false);});
+  document.getElementById("zreset").addEventListener("click",function(){state.view=null;renderMap();});
+  map.addEventListener("wheel",function(e){
+    if(!(e.ctrlKey||e.metaKey))return;
+    e.preventDefault();
+    var f=Math.exp(-Math.max(-40,Math.min(40,e.deltaY))*0.01),a=frac(e);
+    zoomAt(f,a[0],a[1],true);
+    clearTimeout(wheelT);wheelT=setTimeout(renderMap,140);
+  },{passive:false});
+  map.addEventListener("dblclick",function(e){
+    if(e.target.closest&&e.target.closest(".pin"))return;
+    var a=frac(e);zoomAt(1.8,a[0],a[1],false);
+  });
+  map.addEventListener("click",function(e){if(moved){e.stopPropagation();moved=false;}},true);
+  map.addEventListener("pointerdown",function(e){
+    if(e.pointerType==="mouse"&&e.button!==0)return;
+    ptrs[e.pointerId]={x:e.clientX,y:e.clientY};
+    moved=false;
+    var ids=Object.keys(ptrs);
+    if(ids.length===1){drag={sx:e.clientX,sy:e.clientY,v:curView(),started:false};pinch=null;}
+    else if(ids.length===2){
+      var a=ptrs[ids[0]],b=ptrs[ids[1]];
+      pinch={d:Math.max(1,Math.hypot(a.x-b.x,a.y-b.y)),v:curView(),mx:(a.x+b.x)/2,my:(a.y+b.y)/2};
+      drag=null;moved=true;
+    }
+  });
+  map.addEventListener("pointermove",function(e){
+    var p=ptrs[e.pointerId];if(!p)return;
+    p.x=e.clientX;p.y=e.clientY;
+    var s=svgEl();if(!s)return;
+    var r=s.getBoundingClientRect(),ids=Object.keys(ptrs);
+    if(pinch&&ids.length>=2){
+      var a=ptrs[ids[0]],b=ptrs[ids[1]],f=Math.hypot(a.x-b.x,a.y-b.y)/pinch.d,v=pinch.v;
+      var nw=Math.min(W,Math.max(W/MAXK,v.w/f)),nh=nw*H/W;
+      var fx=(pinch.mx-r.left)/r.width,fy=(pinch.my-r.top)/r.height,px=v.x+fx*v.w,py=v.y+fy*v.h;
+      var cfx=((a.x+b.x)/2-r.left)/r.width,cfy=((a.y+b.y)/2-r.top)/r.height;
+      state.view=clampView({x:px-cfx*nw,y:py-cfy*nh,w:nw,h:nh});
+      apply(state.view);
+    } else if(drag&&ids.length===1){
+      var dx=e.clientX-drag.sx,dy=e.clientY-drag.sy;
+      if(!drag.started){
+        if(Math.abs(dx)+Math.abs(dy)<5)return;
+        drag.started=true;moved=true;
+        try{map.setPointerCapture(e.pointerId);}catch(err){}
+      }
+      var u=drag.v.w/r.width;
+      state.view=clampView({x:drag.v.x-dx*u,y:drag.v.y-dy*u,w:drag.v.w,h:drag.v.h});
+      apply(state.view);
+    }
+  });
+  function end(e){
+    if(!ptrs[e.pointerId])return;
+    delete ptrs[e.pointerId];
+    var ids=Object.keys(ptrs);
+    if(pinch&&ids.length<2){
+      pinch=null;renderMap();
+      if(ids.length===1){drag={sx:ptrs[ids[0]].x,sy:ptrs[ids[0]].y,v:curView(),started:true};}
+      return;
+    }
+    if(ids.length===0)drag=null;
+  }
+  map.addEventListener("pointerup",end);
+  map.addEventListener("pointercancel",end);
+}
+
+/* ---------- state ---------- */
+function select(id){state.sel=id;renderMap();renderDetail();}
+function setDay(id,keepSel){
+  state.day=id;state.view=null;if(!keepSel)state.sel=null;
+  try{if(location.hash.slice(1)!==id)location.hash=id;}catch(e){}
+  renderTabs();renderMap();renderDetail();renderPanel();
+}
+function fromHash(){var h="";try{h=location.hash.slice(1);}catch(e){}return (h==="all"||dayById(h))?h:"all";}
+
+document.addEventListener("click",function(e){
+  var b=e.target.closest&&e.target.closest("[data-copy]");if(!b)return;
+  var txt=b.getAttribute("data-copy"),done=function(){var o=b.textContent;b.textContent="Copied";setTimeout(function(){b.textContent=o;},1400);};
+  var fallback=function(){var c=b.parentNode.querySelector("code");if(c){var r=document.createRange();r.selectNodeContents(c);var s=window.getSelection();s.removeAllRanges();s.addRange(r);}b.textContent="Selected";setTimeout(function(){b.textContent="Copy";},1400);};
+  try{navigator.clipboard.writeText(txt).then(done,fallback);}catch(err){fallback();}
+});
+window.addEventListener("hashchange",function(){var d=fromHash();if(d!==state.day){state.day=d;state.view=null;state.sel=null;renderTabs();renderMap();renderDetail();renderPanel();}});
+
+state.day=fromHash();
+renderTabs();renderMap();renderDetail();renderPanel();renderChips();renderGrid();renderNear();setupZoom();
+})();
+</script>
+
+</body>
+</html>
